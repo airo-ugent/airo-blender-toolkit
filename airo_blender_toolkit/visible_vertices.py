@@ -27,9 +27,7 @@ def intersect_ray_scene(scene, origin, destination):
 def get_visible_vertices(obj):
     scene = bpy.context.scene
     cam_ob = scene.camera
-    cam = bpy.data.cameras[
-        cam_ob.name
-    ]  # camera in scene is object type, not a camera type
+    cam = bpy.data.cameras[cam_ob.name]  # camera in scene is object type, not a camera type
     cam_mat = cam_ob.matrix_world
     view_frame = cam.view_frame(
         scene=scene
@@ -56,7 +54,8 @@ def get_visible_vertices(obj):
             # only take into account vertices in front of the camera, not behind it.
             if d.dot(view_normal) < 0:
                 d = d.length
-                # check intersection with all other objects in scene. We revert the direction, ie. look from the camera to avoid self intersection
+                # check intersection with all other objects in scene. We revert the direction,
+                # ie. look from the camera to avoid self intersection
                 if intersect_ray_scene(scene, vertex_coords, cam_pos):
                     d = None
             else:

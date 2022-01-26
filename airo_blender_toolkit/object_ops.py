@@ -1,5 +1,6 @@
 import bpy
 
+
 # TODO cleanup and document
 def make_object(name, mesh):
     vertices, edges, faces = mesh
