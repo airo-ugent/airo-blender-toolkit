@@ -8,24 +8,8 @@ def make_object(name, mesh):
     mesh.from_pydata(vertices, edges, faces)
     mesh.update()
     object = bpy.data.objects.new(name, mesh)
-    collection = bpy.data.collections["Collection"]
-    collection.objects.link(object)
+    bpy.context.collection.objects.link(object)
     return object
-
-
-def set_location(object, location):
-    select_only(object)
-    object.location = location
-    bpy.ops.object.transform_apply(location=True)
-
-
-def rotate(object, angle, axis="Z"):
-    select_only(object)
-    # Ugly way to set context for transform, figure out the right way to do this.
-    ov = bpy.context.copy()
-    ov["area"] = [a for a in bpy.context.screen.areas if a.type == "VIEW_3D"][0]
-    bpy.ops.transform.rotate(ov, value=angle, orient_axis=axis, orient_type="GLOBAL")
-    bpy.ops.object.transform_apply(rotation=True)
 
 
 def cleanup_scene():
