@@ -2,10 +2,12 @@ import os
 
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
+from mathutils import Color
 
 import airo_blender_toolkit as abt
 
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
+import blenderproc as bproc  # noqa: E402
 from blenderproc.python.types.MeshObjectUtility import MeshObject  # noqa: E402
 
 
@@ -73,3 +75,21 @@ class KeypointedObject(MeshObject):
         for key, coords in keypoints.items():
             keypoints_json[key + suffix] = [list(c) for c in coords]
         return keypoints_json
+
+    def visualize_keypoints(self):
+        n = len(self.keypoints_3D.keys())
+
+        hues = [float(i) / n for i in range(n)]
+
+        colors = []
+        for hue in hues:
+            color = Color()
+            color.hsv = hue, 1.0, 1.0
+            colors.append(color)
+
+        for color, keypoints in zip(colors, self.keypoints_3D.values()):
+            for keypoint in keypoints:
+                print(keypoint)
+                sphere = bproc.object.create_primitive("SPHERE", location=keypoint, radius=0.1)
+                material = sphere.new_material("Material")
+                material.set_principled_shader_value("Base Color", tuple(color) + (1,))
