@@ -50,6 +50,7 @@ def visualize_transform(matrix: Matrix, scale: float = 1.0):
         cylinder.persist_transformation_into_mesh()
         cylinder.blender_obj.parent = empty
     empty.matrix_world @= matrix
+    empty.empty_display_size = scale
 
     for axis, color in zip(axes, blender_rgb):
         material = cylinders[axis].new_material("Material")

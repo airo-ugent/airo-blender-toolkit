@@ -17,7 +17,11 @@ class KeypointedObject(MeshObject):
     """
 
     def __init__(self, bpy_object: bpy.types.Object, keypoint_ids: dict[str, list[int]]):
-        self.keypoint_ids = keypoint_ids
+        self.keypoint_ids = keypoint_ids.copy()
+        for key, value in self.keypoint_ids.items():
+            if isinstance(value, int):
+                self.keypoint_ids[key] = [value]
+
         super().__init__(bpy_object)
 
     def __setattr__(self, key, value):
@@ -76,7 +80,7 @@ class KeypointedObject(MeshObject):
             keypoints_json[key + suffix] = [list(c) for c in coords]
         return keypoints_json
 
-    def visualize_keypoints(self):
+    def visualize_keypoints(self, radius=0.05):
         n = len(self.keypoints_3D.keys())
 
         hues = [float(i) / n for i in range(n)]
@@ -87,9 +91,10 @@ class KeypointedObject(MeshObject):
             color.hsv = hue, 1.0, 1.0
             colors.append(color)
 
-        for color, keypoints in zip(colors, self.keypoints_3D.values()):
+        for color, (category, keypoints) in zip(colors, self.keypoints_3D.items()):
             for keypoint in keypoints:
-                print(keypoint)
-                sphere = bproc.object.create_primitive("SPHERE", location=keypoint, radius=0.1)
+                sphere = bproc.object.create_primitive("SPHERE", location=keypoint, radius=radius)
+                sphere.blender_obj.name = category
                 material = sphere.new_material("Material")
                 material.set_principled_shader_value("Base Color", tuple(color) + (1,))
+                material.blender_obj.diffuse_color = tuple(color) + (1,)
