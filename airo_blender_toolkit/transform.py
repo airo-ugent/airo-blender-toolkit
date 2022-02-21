@@ -2,10 +2,29 @@ import math
 import os
 
 import bpy
+import numpy as np
 from mathutils import Matrix
+from scipy.spatial.transform import Rotation
 
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 import blenderproc as bproc  # noqa: E402
+
+
+def rotate_point(point, rotation_origin, rotation_axis, angle):
+    unit_axis = rotation_axis / np.linalg.norm(rotation_axis)
+    rotation = Rotation.from_rotvec(angle * unit_axis)
+    point_new = rotation.as_matrix() @ (point - rotation_origin) + rotation_origin
+    return point_new
+
+
+def homogeneous_transform(x_column, y_column, z_column, translation):
+    matrix = np.identity(4)
+    matrix[0:3, 0] = x_column
+    matrix[0:3, 1] = y_column
+    matrix[0:3, 2] = z_column
+    matrix[0:3, 3] = translation
+    return matrix
+
 
 blender_rgb = [
     [0.930111, 0.036889, 0.084376, 1.000000],
@@ -49,10 +68,12 @@ def visualize_transform(matrix: Matrix, scale: float = 1.0):
     for cylinder in cylinders.values():
         cylinder.persist_transformation_into_mesh()
         cylinder.blender_obj.parent = empty
-    empty.matrix_world @= matrix
+    empty.matrix_world @= Matrix(matrix)
     empty.empty_display_size = scale
 
     for axis, color in zip(axes, blender_rgb):
         material = cylinders[axis].new_material("Material")
         material.set_principled_shader_value("Base Color", color)
         material.blender_obj.diffuse_color = color
+
+    return empty
