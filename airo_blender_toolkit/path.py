@@ -7,6 +7,9 @@ import airo_blender_toolkit as abt
 
 
 class CartesianPath(ABC):
+    def __init__(self):
+        self.init_completion_to_parameter_map()
+
     def pose(self, path_completion):
         path_parameter = self.map(path_completion)
         return self._pose(path_parameter)
@@ -24,31 +27,38 @@ class CartesianPath(ABC):
         return self.pose(1.0)
 
     def map(self, path_completion):
-        path_parameter = path_completion
+        path_parameter = self.completion_to_parameter_map[path_completion]
+        # path_parameter = path_completion
         return path_parameter
 
-    def arc_length(self, segments=1000):
-        total = 0.0
-        for i in range(segments):
-            p0 = self._pose(float(i) / segments).position
-            p1 = self._pose(float(i + 1) / segments).position
-            total += np.linalg.norm(p1 - p0)
-        return total
+    def path_length(self, steps=1000):
+        p = self._pose(0.0).position
+        cumulative_distance = 0.0
+        for path_parameter in np.linspace(1.0 / steps, 1, steps):
+            p_next = self._pose(path_parameter).position
+            cumulative_distance += np.linalg.norm(p_next - p)
+            p = p_next
+        return cumulative_distance
 
-    def calculate_arc_length_parametrization(self):
-        for path_parameter in np.linspace(0, 1, 1000):
-            self._pose(path_parameter).position
-            self._pose(path_parameter + 0.001).position
+    def init_completion_to_parameter_map(self, steps=10000):
+        map = abt.InterpolatingDict()
+        map[0.0] = 0.0
 
-    def check_arc_length_parametrization(self, segments=10):
-        arc_length = self.arc_length(segments)
-        total = 0.0
-        print("Completion | Arc Length")
-        for i in range(segments):
-            p0 = self._pose(float(i) / segments).position
-            p1 = self._pose(float(i + 1) / segments).position
-            total += np.linalg.norm(p1 - p0)
-            print(f"{float(i + 1) / segments:.3f} {total / arc_length:.3f}")
+        p = self._pose(0.0).position
+        cumulative_distance = 0.0
+        path_length = self.path_length(steps=steps)
+
+        for path_parameter in np.linspace(1.0 / steps, 1, steps):
+            p_next = self._pose(path_parameter).position
+            cumulative_distance += np.linalg.norm(p_next - p)
+            cumulative_distance_fraction = cumulative_distance / path_length
+            map[cumulative_distance_fraction] = path_parameter
+            p = p_next
+
+        print("CUMULATIVE DISTANCE", cumulative_distance)
+
+        self.completion_to_parameter_map = map
+        return map
 
 
 class TiltedEllipticalArcPath(CartesianPath):
@@ -74,8 +84,10 @@ class TiltedEllipticalArcPath(CartesianPath):
 
         # Get end pose as if orientation mode was "rotated", only used internally
         self.orientation_mode = "rotated"
-        self._end_pose = self.end
+        self._end_pose = self._pose(1.0)
         self.orientation_mode = orientation_mode
+
+        super().__init__()
 
     def _rotation_basis(self):
         X = self.rotation_axis

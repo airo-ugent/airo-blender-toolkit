@@ -1,4 +1,5 @@
 import airo_blender_toolkit.camera as camera
+from airo_blender_toolkit.datastructures import InterpolatingDict
 from airo_blender_toolkit.hdri import download_hdri, load_hdri
 from airo_blender_toolkit.keypointed_object import KeypointedObject
 from airo_blender_toolkit.object import make_object
@@ -25,4 +26,5 @@ __all__ = (
     "Trajectory",
     "CartesianPath",
     "TiltedEllipticalArcPath",
+    "InterpolatingDict",
 )
