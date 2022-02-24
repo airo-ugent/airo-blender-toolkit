@@ -10,6 +10,37 @@ os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 import blenderproc as bproc  # noqa: E402
 
 
+class Frame(np.ndarray):
+    """4x4 matrix that represents a frame/pose/homogeneous transfrom.
+    See: https://numpy.org/doc/stable/user/basics.subclassing.html
+    """
+
+    def __new__(cls, matrix):
+        obj = np.asarray(matrix).view(cls)
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+
+    @classmethod
+    def from_vectors(cls, x_column, y_column, z_column, translation):
+        matrix = np.identity(4)
+        matrix[0:3, 0] = x_column
+        matrix[0:3, 1] = y_column
+        matrix[0:3, 2] = z_column
+        matrix[0:3, 3] = translation
+        return cls(matrix)
+
+    @property
+    def position(self):
+        return self[0:3, 3]
+
+    @property
+    def orientation(self):
+        return self[0:3, 0:3]
+
+
 def rotate_point(point, rotation_origin, rotation_axis, angle):
     unit_axis = rotation_axis / np.linalg.norm(rotation_axis)
     rotation = Rotation.from_rotvec(angle * unit_axis)
@@ -17,13 +48,11 @@ def rotate_point(point, rotation_origin, rotation_axis, angle):
     return point_new
 
 
-def homogeneous_transform(x_column, y_column, z_column, translation):
-    matrix = np.identity(4)
-    matrix[0:3, 0] = x_column
-    matrix[0:3, 1] = y_column
-    matrix[0:3, 2] = z_column
-    matrix[0:3, 3] = translation
-    return matrix
+def project_point_on_line(point, point_on_line, line_direction):
+    unit_direction = line_direction / np.linalg.norm(line_direction)
+    point_on_line_to_point = point - point_on_line
+    projection = point_on_line + np.dot(point_on_line_to_point, unit_direction) * unit_direction
+    return projection
 
 
 blender_rgb = [
