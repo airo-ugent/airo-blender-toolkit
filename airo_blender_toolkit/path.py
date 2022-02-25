@@ -167,6 +167,35 @@ class EllipticalArcPath(TiltedEllipticalArcPath):
         super.__init__(start_pose, center, rotation_axis, start_angle, end_angle, scale, tilt_angle, orientation_mode)
 
 
+def quadratic_bezier_polynomial(control_points, bezier_parameter):
+    if len(control_points) != 3:
+        raise Exception("A quadratic bezier requires 3 control points.")
+
+    P0, P1, P2 = control_points
+    t = bezier_parameter
+
+    P0_term = ((1 - t) ** 2) * P0
+    P1_term = 2 * (1 - t) * t * P1
+    P2_term = (t ** 2) * P2
+    return P0_term + P1_term + P2_term
+
+
+class QuadraticBezierPath(CartesianPath):
+    def __init__(self, control_points):
+        if len(control_points) != 3:
+            raise Exception("A quadratic bezier requires 3 control points.")
+
+        self.control_points = control_points
+        super().__init__()
+
+    def _pose(self, path_parameter=0.5):
+        position = quadratic_bezier_polynomial(self.control_points, path_parameter)
+        matrix = np.identity(4)
+        matrix[0:3, 3] = position
+        pose = abt.Frame(matrix)
+        return pose
+
+
 def cubic_bezier_polynomial(control_points, bezier_parameter):
     if len(control_points) != 4:
         raise Exception("A cubic bezier requires 4 control points.")
