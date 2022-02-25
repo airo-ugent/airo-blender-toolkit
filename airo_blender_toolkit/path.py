@@ -199,7 +199,7 @@ class BezierPath(CartesianPath):
         if len(control_points) != 3 and len(control_points) != 4:
             raise Exception(
                 """Currently only quadratic and cubic Bezier paths are supported,
-                which required 3 or 4 control points respectively."""
+                which require 3 or 4 control points respectively."""
             )
 
         if len(control_points) == 3:
