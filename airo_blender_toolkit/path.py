@@ -169,7 +169,7 @@ class EllipticalArcPath(TiltedEllipticalArcPath):
 
 def quadratic_bezier_polynomial(control_points, bezier_parameter):
     if len(control_points) != 3:
-        raise Exception("A quadratic bezier requires 3 control points.")
+        raise Exception("A quadratic Bezier requires 3 control points.")
 
     P0, P1, P2 = control_points
     t = bezier_parameter
@@ -180,10 +180,32 @@ def quadratic_bezier_polynomial(control_points, bezier_parameter):
     return P0_term + P1_term + P2_term
 
 
-class QuadraticBezierPath(CartesianPath):
+def cubic_bezier_polynomial(control_points, bezier_parameter):
+    if len(control_points) != 4:
+        raise Exception("A cubic Bezier requires 4 control points.")
+
+    P0, P1, P2, P3 = control_points
+    t = bezier_parameter
+
+    P0_term = ((1 - t) ** 3) * P0
+    P1_term = 3 * ((1 - t) ** 2) * t * P1
+    P2_term = 3 * (1 - t) * (t ** 2) * P2
+    P3_term = (t ** 3) * P3
+    return P0_term + P1_term + P2_term + P3_term
+
+
+class BezierPath(CartesianPath):
     def __init__(self, control_points, start_orientation, end_orientation):
-        if len(control_points) != 3:
-            raise Exception("A quadratic bezier requires 3 control points.")
+        if len(control_points) != 3 and len(control_points) != 4:
+            raise Exception(
+                """Currently only quadratic and cubic Bezier paths are supported,
+                which required 3 or 4 control points respectively."""
+            )
+
+        if len(control_points) == 3:
+            self.bezier_polynomial = quadratic_bezier_polynomial
+        else:
+            self.bezier_polynomial = cubic_bezier_polynomial
 
         self.control_points = control_points
         self.start_orientation = start_orientation
@@ -196,37 +218,7 @@ class QuadraticBezierPath(CartesianPath):
         super().__init__()
 
     def _pose(self, path_parameter=0.5):
-        position = quadratic_bezier_polynomial(self.control_points, path_parameter)
+        position = self.bezier_polynomial(self.control_points, path_parameter)
         interpolated_orientation = self.slerp(path_parameter).as_matrix()
         pose = abt.Frame.from_orientation_and_position(interpolated_orientation, position)
-        return pose
-
-
-def cubic_bezier_polynomial(control_points, bezier_parameter):
-    if len(control_points) != 4:
-        raise Exception("A cubic bezier requires 4 control points.")
-
-    P0, P1, P2, P3 = control_points
-    t = bezier_parameter
-
-    P0_term = ((1 - t) ** 3) * P0
-    P1_term = 3 * ((1 - t) ** 2) * t * P1
-    P2_term = 3 * (1 - t) * (t ** 2) * P2
-    P3_term = (t ** 3) * P3
-    return P0_term + P1_term + P2_term + P3_term
-
-
-class CubicBezierPath(CartesianPath):
-    def __init__(self, control_points):
-        if len(control_points) != 4:
-            raise Exception("A cubic bezier requires 4 control points.")
-
-        self.control_points = control_points
-        super().__init__()
-
-    def _pose(self, path_parameter=0.5):
-        position = cubic_bezier_polynomial(self.control_points, path_parameter)
-        matrix = np.identity(4)
-        matrix[0:3, 3] = position
-        pose = abt.Frame(matrix)
         return pose
