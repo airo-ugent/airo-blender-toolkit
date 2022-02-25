@@ -15,7 +15,7 @@ class CartesianPath(ABC):
         return self._pose(path_parameter)
 
     @abstractmethod
-    def _pose(self, path_parameter):
+    def _pose(self, path_parameter=0.5):
         pass
 
     @property
@@ -54,8 +54,6 @@ class CartesianPath(ABC):
             cumulative_distance_fraction = cumulative_distance / path_length
             map[cumulative_distance_fraction] = path_parameter
             p = p_next
-
-        print("CUMULATIVE DISTANCE", cumulative_distance)
 
         self.completion_to_parameter_map = map
         return map
@@ -167,3 +165,33 @@ class EllipticalArcPath(TiltedEllipticalArcPath):
     ):
         tilt_angle = 0
         super.__init__(start_pose, center, rotation_axis, start_angle, end_angle, scale, tilt_angle, orientation_mode)
+
+
+def cubic_bezier_polynomial(control_points, bezier_parameter):
+    if len(control_points) != 4:
+        raise Exception("A cubic bezier requires 4 control points.")
+
+    P0, P1, P2, P3 = control_points
+    t = bezier_parameter
+
+    P0_term = ((1 - t) ** 3) * P0
+    P1_term = 3 * ((1 - t) ** 2) * t * P1
+    P2_term = 3 * (1 - t) * (t ** 2) * P2
+    P3_term = (t ** 3) * P3
+    return P0_term + P1_term + P2_term + P3_term
+
+
+class CubicBezierPath(CartesianPath):
+    def __init__(self, control_points):
+        if len(control_points) != 4:
+            raise Exception("A cubic bezier requires 4 control points.")
+
+        self.control_points = control_points
+        super().__init__()
+
+    def _pose(self, path_parameter=0.5):
+        position = cubic_bezier_polynomial(self.control_points, path_parameter)
+        matrix = np.identity(4)
+        matrix[0:3, 3] = position
+        pose = abt.Frame(matrix)
+        return pose
