@@ -181,18 +181,24 @@ def quadratic_bezier_polynomial(control_points, bezier_parameter):
 
 
 class QuadraticBezierPath(CartesianPath):
-    def __init__(self, control_points):
+    def __init__(self, control_points, start_orientation, end_orientation):
         if len(control_points) != 3:
             raise Exception("A quadratic bezier requires 3 control points.")
 
         self.control_points = control_points
+        self.start_orientation = start_orientation
+        self.end_orientation = end_orientation
+
+        orientations = Rotation.from_matrix([start_orientation, end_orientation])
+        slerp = Slerp([0.0, 1.0], orientations)
+        self.slerp = slerp
+
         super().__init__()
 
     def _pose(self, path_parameter=0.5):
         position = quadratic_bezier_polynomial(self.control_points, path_parameter)
-        matrix = np.identity(4)
-        matrix[0:3, 3] = position
-        pose = abt.Frame(matrix)
+        interpolated_orientation = self.slerp(path_parameter).as_matrix()
+        pose = abt.Frame.from_orientation_and_position(interpolated_orientation, position)
         return pose
 
 

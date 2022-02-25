@@ -32,6 +32,17 @@ class Frame(np.ndarray):
         matrix[0:3, 3] = translation
         return cls(matrix)
 
+    @classmethod
+    def from_orientation_and_position(cls, orientation, position):
+        matrix = np.identity(4)
+        matrix[0:3, 0:3] = orientation
+        matrix[0:3, 3] = position
+        return cls(matrix)
+
+    @classmethod
+    def identity(cls):
+        return cls(np.identity(4))
+
     @property
     def position(self):
         return self[0:3, 3]
