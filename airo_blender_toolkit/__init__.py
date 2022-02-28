@@ -6,7 +6,13 @@ from airo_blender_toolkit.object import make_object
 from airo_blender_toolkit.path import CartesianPath, TiltedEllipticalArcPath
 from airo_blender_toolkit.texture import random_texture_name
 from airo_blender_toolkit.trajectory import Trajectory
-from airo_blender_toolkit.transform import Frame, project_point_on_line, rotate_point, visualize_transform
+from airo_blender_toolkit.transform import (
+    Frame,
+    project_point_on_line,
+    rotate_point,
+    visualize_path,
+    visualize_transform,
+)
 from airo_blender_toolkit.visible_vertices import is_visible, visible_vertices
 
 # Prevents F401 unused imports
@@ -23,6 +29,7 @@ __all__ = (
     "random_texture_name",
     "KeypointedObject",
     "visualize_transform",
+    "visualize_path",
     "Trajectory",
     "CartesianPath",
     "TiltedEllipticalArcPath",

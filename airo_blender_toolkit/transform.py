@@ -6,6 +6,8 @@ import numpy as np
 from mathutils import Matrix
 from scipy.spatial.transform import Rotation
 
+from airo_blender_toolkit.object import select_only
+
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 import blenderproc as bproc  # noqa: E402
 
@@ -117,3 +119,26 @@ def visualize_transform(matrix: Matrix, scale: float = 1.0):
         material.blender_obj.diffuse_color = color
 
     return empty
+
+
+def visualize_path(path, color=[0.0, 1.0, 0.0, 1.0]):
+    vertices = [path.pose(i).position for i in np.linspace(0, 1, 50)]
+    edges = [(i, i + 1) for i in range(len(vertices) - 1)]
+    faces = []
+    mesh = bpy.data.meshes.new("Path")
+    mesh.from_pydata(vertices, edges, faces)
+    mesh.update()
+    object = bpy.data.objects.new("Path", mesh)
+    bpy.context.collection.objects.link(object)
+
+    select_only(object)
+    bpy.ops.object.modifier_add(type="SKIN")
+
+    for vertex in object.data.vertices:
+        skin_vertex = object.data.skin_vertices[""].data[vertex.index]
+        skin_vertex.radius = (0.002, 0.002)
+
+    bproc_obj = bproc.python.types.MeshObjectUtility.MeshObject(object)
+    material = bproc_obj.new_material("Material")
+    material.set_principled_shader_value("Base Color", color)
+    material.blender_obj.diffuse_color = color
