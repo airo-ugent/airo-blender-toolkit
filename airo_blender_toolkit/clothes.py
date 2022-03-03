@@ -14,19 +14,18 @@ class PolygonalShirt:
         neck_width=0.32,
         neck_depth=0.08,
         shoulder_width=0.62,
-        shoulder_angle=18,
+        shoulder_height=0.9,
         sleeve_width_start=0.28,
         sleeve_width_end=0.18,
         sleeve_length=0.76,
         sleeve_angle=-3,
         scale=0.635,
-        triangle_density=10000.0,
     ):
         self.bottom_width = bottom_width
         self.neck_width = neck_width
         self.neck_depth = neck_depth
         self.shoulder_width = shoulder_width
-        self.shoulder_angle = shoulder_angle
+        self.shoulder_height = shoulder_height
         self.sleeve_width_start = sleeve_width_start
         self.sleeve_width_end = sleeve_width_end
         self.sleeve_length = sleeve_length
@@ -44,14 +43,13 @@ class PolygonalShirt:
         neck_top = np.array([neck_offset, 1.0, 0.0])
         neck_bottom = np.array([0, 1.0 - self.neck_depth, 0.0])
 
-        shoulder_offset = self.shoulder_width / 2.0 - neck_offset
-        shoulder_height = 1.0 - np.tan(np.deg2rad(self.shoulder_angle)) * shoulder_offset
-        shoulder = np.array([self.shoulder_width / 2.0, shoulder_height, 0.0])
+        self.shoulder_width / 2.0 - neck_offset
+        shoulder = np.array([self.shoulder_width / 2.0, self.shoulder_height, 0.0])
 
         A = np.abs(self.bottom_width - self.shoulder_width) / 2.0
         C = self.sleeve_width_start
         B = np.sqrt(C ** 2 - A ** 2)
-        armpit_height = shoulder_height - B
+        armpit_height = self.shoulder_height - B
         armpit = np.array([self.bottom_width / 2.0, armpit_height, 0.0])
 
         sleeve_middle = (shoulder + armpit) / 2.0

@@ -44,14 +44,13 @@ class AddShirt(bpy.types.Operator, AddObjectHelper):
         step=1,
         default=0.62,
     )
-    shoulder_angle: FloatProperty(
-        name="shoulder_angle",
-        description="shoulder_angle",
-        soft_min=np.deg2rad(0.0),
-        soft_max=np.deg2rad(45.0),
-        step=10,
-        default=np.deg2rad(18.0),
-        subtype="ANGLE",  # noqa: F821
+    shoulder_height: FloatProperty(
+        name="shoulder_height",
+        description="shoulder_height",
+        soft_min=1.0,
+        soft_max=0.9,
+        step=1,
+        default=0.95,
     )
     sleeve_width_start: FloatProperty(
         name="sleeve_width_start",
@@ -104,13 +103,12 @@ class AddShirt(bpy.types.Operator, AddObjectHelper):
             self.neck_width,
             self.neck_depth,
             self.shoulder_width,
-            np.rad2deg(self.shoulder_angle),
+            self.shoulder_height,
             self.sleeve_width_start,
             self.sleeve_width_end,
             self.sleeve_length,
             np.rad2deg(self.sleeve_angle),
             self.scale,
-            triangle_density=0.0,
         )
 
         return {"FINISHED"}
