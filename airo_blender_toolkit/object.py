@@ -3,6 +3,10 @@ import bpy
 
 # TODO cleanup and document
 def make_object(name, mesh):
+    # consider using:
+    # from bpy_extras import object_utils
+    # object_utils.object_data_add(context, mesh, operator=self)
+
     vertices, edges, faces = mesh
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(vertices, edges, faces)

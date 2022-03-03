@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import triangle
 
 import airo_blender_toolkit as abt
 
@@ -33,12 +32,10 @@ class PolygonalShirt:
         self.sleeve_length = sleeve_length
         self.sleeve_angle = sleeve_angle
         self.scale = scale
-        self.triangle_density = triangle_density
 
-        self.outline_mesh, self.outline_object = self.mesh_outline()
-        self.mesh, self.object = self.triangulate()
+        self.object = self.make_object()
 
-    def mesh_outline(self):
+    def make_object(self):
         # First we make the right half of the shirt
         bottom_middle = np.array([0.0, 0.0, 0.0])
         bottom_side = np.array([self.bottom_width / 2.0, 0.0, 0.0])
@@ -78,35 +75,18 @@ class PolygonalShirt:
             neck_bottom,
         ]
 
-        # Note the reverse iteration order, this is to make the specifying the edges easy
-        n_vertices = len(vertices)
-        for i in range(n_vertices - 1, 0, -1):
-            mirrored_vertex = vertices[i].copy()
+        for vertex in reversed(vertices[1:-1]):
+            mirrored_vertex = vertex.copy()
             mirrored_vertex[0] *= -1
             vertices.append(mirrored_vertex)
 
         vertices = np.array(vertices)
         vertices *= self.scale
-        edges = [(i, i + 1) for i in range(len(vertices) - 1)]
-        edges.append((len(vertices) - 1, 0))
-        edges = np.array(edges)
-        mesh = vertices, edges, []
-        abt.make_object("Shirt Outline", mesh)
-        return mesh, object
 
-    def triangulate(self):
-        input_vertices_3D, edges, _ = self.outline_mesh
-        input_vertices_2D = input_vertices_3D[:, 0:2]
-
-        input_mesh = dict(vertices=input_vertices_2D, segments=edges)
-        output_mesh = triangle.triangulate(input_mesh, f"q30pa{1.0 / self.triangle_density}")
-
-        vertices_2D, triangles = output_mesh["vertices"], output_mesh["triangles"]
-        vertices_3D = np.column_stack([vertices_2D, np.zeros(vertices_2D.shape[0])])
-
-        mesh = vertices_3D, [], triangles
-        object = abt.make_object("Shirt", mesh)
-        return mesh, object
+        faces = [list(range(len(vertices)))]
+        mesh = vertices, [], faces
+        abt.make_object("Shirt", mesh)
+        return object
 
 
 if __name__ == "__main__":

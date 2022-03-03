@@ -1,4 +1,5 @@
 import airo_blender_toolkit.camera as camera
+from airo_blender_toolkit.clothes import PolygonalShirt
 from airo_blender_toolkit.datastructures import InterpolatingDict
 from airo_blender_toolkit.hdri import download_hdri, load_hdri
 from airo_blender_toolkit.keypointed_object import KeypointedObject
@@ -13,6 +14,7 @@ from airo_blender_toolkit.transform import (
     visualize_path,
     visualize_transform,
 )
+from airo_blender_toolkit.triangulate import triangulate, triangulate_blender_object
 from airo_blender_toolkit.visible_vertices import is_visible, visible_vertices
 
 # Prevents F401 unused imports
@@ -34,4 +36,7 @@ __all__ = (
     "CartesianPath",
     "TiltedEllipticalArcPath",
     "InterpolatingDict",
+    "PolygonalShirt",
+    "triangulate",
+    "triangulate_blender_object",
 )
