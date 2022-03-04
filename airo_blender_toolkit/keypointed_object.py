@@ -1,6 +1,7 @@
 import os
 
 import bpy
+import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Color
 
@@ -33,7 +34,7 @@ class KeypointedObject(MeshObject):
         vertices = self.blender_obj.data.vertices
         keypoints = {}
         for key, vertex_ids in self.keypoint_ids.items():
-            keypoints[key] = [vertices[id].co for id in vertex_ids]
+            keypoints[key] = [np.array(vertices[id].co) for id in vertex_ids]
         return keypoints
 
     @property

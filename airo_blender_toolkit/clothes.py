@@ -3,11 +3,12 @@ import os
 import numpy as np
 
 import airo_blender_toolkit as abt
+from airo_blender_toolkit.keypointed_object import KeypointedObject
 
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 
 
-class PolygonalShirt(abt.KeypointedObject):
+class PolygonalShirt(KeypointedObject):
     def __init__(
         self,
         bottom_width=0.65,
