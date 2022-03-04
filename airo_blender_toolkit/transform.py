@@ -81,6 +81,26 @@ def shorten_cylinder(cylinder, radius):
             v.co.z = -radius
 
 
+def vectors_are_parallel(a, b):
+    v = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    return np.isclose(1.0, v) or np.isclose(-1.0, v)
+
+
+def visualize_line(center, direction, thickness=0.005, length=1.0):
+    cylinder = bproc.object.create_primitive("CYLINDER", radius=thickness, depth=length)
+
+    Z = direction / np.linalg.norm(direction)
+    up = np.array([0.0, 0.0, 1.0])
+
+    X = up if not vectors_are_parallel(up, Z) else np.array([1.0, 0.0, 0.0])
+    X -= np.dot(Z, X) * Z
+    X /= np.linalg.norm(X)
+    Y = np.cross(Z, X)
+
+    frame = Frame.from_vectors(X, Y, Z, center)
+    cylinder.blender_obj.matrix_world = Matrix(frame)
+
+
 def visualize_transform(matrix: Matrix, scale: float = 1.0):
     """Creates a blender object with 3 colored axes to visualize a 4x4 matrix that represent a 3D pose/transform.
 

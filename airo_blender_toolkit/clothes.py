@@ -7,7 +7,7 @@ import airo_blender_toolkit as abt
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 
 
-class PolygonalShirt:
+class PolygonalShirt(abt.KeypointedObject):
     def __init__(
         self,
         bottom_width=0.65,
@@ -32,11 +32,28 @@ class PolygonalShirt:
         self.sleeve_angle = sleeve_angle
         self.scale = scale
 
-        self.object = self.make_object()
+        self.blender_object = self.make_shirt_object()
 
-    def make_object(self):
+        keypoint_ids = {
+            "bottom_right": [0],
+            "armpit_right": [1],
+            "sleeve_bottom_right": [2],
+            "sleeve_top_right": [3],
+            "shoulder_right": [4],
+            "neck_right": [5],
+            "neck_middle": [6],
+            "neck_left": [7],
+            "shoulder_left": [8],
+            "sleeve_top_left": [9],
+            "sleeve_bottom_left": [10],
+            "armpit_left": [11],
+            "bottom_left": [12],
+        }
+
+        super().__init__(self.blender_object, keypoint_ids)
+
+    def make_shirt_object(self):
         # First we make the right half of the shirt
-        bottom_middle = np.array([0.0, 0.0, 0.0])
         bottom_side = np.array([self.bottom_width / 2.0, 0.0, 0.0])
 
         neck_offset = self.neck_width / 2.0
@@ -63,7 +80,6 @@ class PolygonalShirt:
         sleeve_end_bottom = abt.rotate_point(sleeve_end_bottom, sleeve_middle, up, -a)
 
         vertices = [
-            bottom_middle,
             bottom_side,
             armpit,
             sleeve_end_bottom,
@@ -73,18 +89,19 @@ class PolygonalShirt:
             neck_bottom,
         ]
 
-        for vertex in reversed(vertices[1:-1]):
+        for vertex in reversed(vertices[0:-1]):
             mirrored_vertex = vertex.copy()
             mirrored_vertex[0] *= -1
             vertices.append(mirrored_vertex)
 
         vertices = np.array(vertices)
+        vertices[:, 1] -= 0.5  # move origin to center of shirt
         vertices *= self.scale
 
         faces = [list(range(len(vertices)))]
         mesh = vertices, [], faces
-        abt.make_object("Shirt", mesh)
-        return object
+        blender_object = abt.make_object("Shirt", mesh)
+        return blender_object
 
 
 if __name__ == "__main__":

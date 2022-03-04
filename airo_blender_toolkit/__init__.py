@@ -11,10 +11,12 @@ from airo_blender_toolkit.transform import (
     Frame,
     project_point_on_line,
     rotate_point,
+    visualize_line,
     visualize_path,
     visualize_transform,
 )
 from airo_blender_toolkit.triangulate import triangulate, triangulate_blender_object
+from airo_blender_toolkit.view_3d import show_wireframes
 from airo_blender_toolkit.visible_vertices import is_visible, visible_vertices
 
 # Prevents F401 unused imports
@@ -39,4 +41,6 @@ __all__ = (
     "PolygonalShirt",
     "triangulate",
     "triangulate_blender_object",
+    "show_wireframes",
+    "visualize_line",
 )
