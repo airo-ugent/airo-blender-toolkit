@@ -7,7 +7,7 @@ from mathutils.geometry import intersect_ray_tri
 
 
 def intersect_ray_quad_3d(quad, origin, destination):
-    ray = destination - origin
+    ray = Vector(destination) - Vector(origin)
     p = intersect_ray_tri(quad[0], quad[1], quad[2], ray, origin)
     if p is None:
         p = intersect_ray_tri(quad[2], quad[3], quad[0], ray, origin)
