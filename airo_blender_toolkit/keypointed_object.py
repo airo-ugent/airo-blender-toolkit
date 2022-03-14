@@ -34,7 +34,7 @@ class KeypointedObject(MeshObject):
         vertices = self.blender_obj.data.vertices
         keypoints = {}
         for key, vertex_ids in self.keypoint_ids.items():
-            keypoints[key] = [np.array(vertices[id].co) for id in vertex_ids]
+            keypoints[key] = [vertices[id].co for id in vertex_ids]
         return keypoints
 
     @property
