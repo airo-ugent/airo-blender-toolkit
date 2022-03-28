@@ -1,7 +1,6 @@
 import os
 
 import bpy
-import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Color
 
@@ -81,7 +80,7 @@ class KeypointedObject(MeshObject):
             keypoints_json[key + suffix] = [list(c) for c in coords]
         return keypoints_json
 
-    def visualize_keypoints(self, radius=0.05):
+    def visualize_keypoints(self, radius=0.02):
         n = len(self.keypoints_3D.keys())
 
         hues = [float(i) / n for i in range(n)]

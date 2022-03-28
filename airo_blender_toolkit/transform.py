@@ -62,6 +62,10 @@ def rotate_point(point, rotation_origin, rotation_axis, angle):
 
 
 def project_point_on_line(point, point_on_line, line_direction):
+    point = np.array(point)
+    point_on_line = np.array(point_on_line)
+    line_direction = np.array(line_direction)
+
     unit_direction = line_direction / np.linalg.norm(line_direction)
     point_on_line_to_point = point - point_on_line
     projection = point_on_line + np.dot(point_on_line_to_point, unit_direction) * unit_direction
@@ -86,7 +90,13 @@ def vectors_are_parallel(a, b):
     return np.isclose(1.0, v) or np.isclose(-1.0, v)
 
 
-def visualize_line(center, direction, thickness=0.005, length=1.0):
+def visualize_line(
+    origin, direction, thickness=0.005, length_forward=1.0, length_backward=1.0, color=(1.0, 1.0, 0.0, 1.0)
+):
+    origin = np.array(origin)
+    direction = np.array(direction)
+
+    length = length_forward + length_backward
     cylinder = bproc.object.create_primitive("CYLINDER", radius=thickness, depth=length)
 
     Z = direction / np.linalg.norm(direction)
@@ -97,11 +107,18 @@ def visualize_line(center, direction, thickness=0.005, length=1.0):
     X /= np.linalg.norm(X)
     Y = np.cross(Z, X)
 
+    center = origin + (length_forward * direction - length_backward * direction) / 2
     frame = Frame.from_vectors(X, Y, Z, center)
     cylinder.blender_obj.matrix_world = Matrix(frame)
 
+    material = cylinder.new_material("Material")
+    material.blender_obj.diffuse_color = color
+    material.set_principled_shader_value("Base Color", color)
 
-def visualize_transform(matrix: Matrix, scale: float = 1.0):
+    return cylinder
+
+
+def visualize_transform(matrix: Matrix, scale: float = 0.1):
     """Creates a blender object with 3 colored axes to visualize a 4x4 matrix that represent a 3D pose/transform.
 
     :param matrix: the matrix that will be visualized
@@ -141,7 +158,7 @@ def visualize_transform(matrix: Matrix, scale: float = 1.0):
     return empty
 
 
-def visualize_path(path, color=[0.0, 1.0, 0.0, 1.0]):
+def visualize_path(path, radius=0.002, color=[0.0, 1.0, 0.0, 1.0]):
     vertices = [path.pose(i).position for i in np.linspace(0, 1, 50)]
     edges = [(i, i + 1) for i in range(len(vertices) - 1)]
     faces = []
@@ -156,7 +173,7 @@ def visualize_path(path, color=[0.0, 1.0, 0.0, 1.0]):
 
     for vertex in object.data.vertices:
         skin_vertex = object.data.skin_vertices[""].data[vertex.index]
-        skin_vertex.radius = (0.002, 0.002)
+        skin_vertex.radius = (radius, radius)
 
     bproc_obj = bproc.python.types.MeshObjectUtility.MeshObject(object)
     material = bproc_obj.new_material("Material")

@@ -5,7 +5,7 @@ from airo_blender_toolkit.gripper import Gripper
 from airo_blender_toolkit.hdri import download_hdri, load_hdri
 from airo_blender_toolkit.keyframe import is_keyframed, keyframe_trajectory, keyframe_visibility
 from airo_blender_toolkit.keypointed_object import KeypointedObject
-from airo_blender_toolkit.object import make_object
+from airo_blender_toolkit.object import make_object, select_only
 from airo_blender_toolkit.path import CartesianPath, TiltedEllipticalArcPath
 from airo_blender_toolkit.texture import random_texture_name
 from airo_blender_toolkit.trajectory import Trajectory
@@ -30,6 +30,7 @@ __all__ = (
     "Frame",
     "project_point_on_line",
     "make_object",
+    "select_only",
     "is_visible",
     "visible_vertices",
     "random_texture_name",
