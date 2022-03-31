@@ -40,7 +40,7 @@ class CartesianPath(ABC):
             p = p_next
         return cumulative_distance
 
-    def init_completion_to_parameter_map(self, steps=10000):
+    def init_completion_to_parameter_map(self, steps=1000):
         map = abt.InterpolatingDict()
         map[0.0] = 0.0
 
