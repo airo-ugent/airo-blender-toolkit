@@ -1,4 +1,5 @@
 import airo_blender_toolkit.camera as camera
+import airo_blender_toolkit.colors as colors
 from airo_blender_toolkit.clothes import PolygonalShirt
 from airo_blender_toolkit.datastructures import InterpolatingDict
 from airo_blender_toolkit.gripper import Gripper
@@ -26,6 +27,7 @@ __all__ = (
     "download_hdri",
     "load_hdri",
     "camera",
+    "colors",
     "rotate_point",
     "Frame",
     "project_point_on_line",
