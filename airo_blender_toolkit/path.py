@@ -149,7 +149,9 @@ class CircularArcPath(TiltedEllipticalArcPath):
     ):
         scale = 1.0
         tilt_angle = 0
-        super.__init__(start_pose, center, rotation_axis, start_angle, end_angle, scale, tilt_angle, orientation_mode)
+        super().__init__(
+            start_pose, center, rotation_axis, start_angle, end_angle, scale, tilt_angle, orientation_mode
+        )
 
 
 class EllipticalArcPath(TiltedEllipticalArcPath):
@@ -164,7 +166,9 @@ class EllipticalArcPath(TiltedEllipticalArcPath):
         orientation_mode="rotated",
     ):
         tilt_angle = 0
-        super.__init__(start_pose, center, rotation_axis, start_angle, end_angle, scale, tilt_angle, orientation_mode)
+        super().__init__(
+            start_pose, center, rotation_axis, start_angle, end_angle, scale, tilt_angle, orientation_mode
+        )
 
 
 def quadratic_bezier_polynomial(control_points, bezier_parameter):

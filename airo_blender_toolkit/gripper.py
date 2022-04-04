@@ -1,3 +1,4 @@
+import blenderproc as bproc
 import bpy
 import numpy as np
 import trimesh
@@ -103,6 +104,19 @@ class Gripper:
 
         scene.frame_set(frame)
         return action
+
+
+class BlockGripper(Gripper):
+    def __init__(self, length=0.05, width=0.12, height=0.05):
+        gripper = bproc.object.create_primitive("CUBE", size=1.0)
+        mesh = gripper.blender_obj.data
+
+        for v in mesh.vertices:
+            v.co.x *= height
+            v.co.y *= width
+            v.co.z *= length
+
+        super().__init__(gripper.blender_obj)
 
 
 if __name__ == "__main__":

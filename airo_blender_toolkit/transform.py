@@ -118,7 +118,7 @@ def visualize_line(
     return cylinder
 
 
-def visualize_transform(matrix: Matrix, scale: float = 0.1):
+def visualize_transform(matrix: Matrix, scale: float = 0.1, use_blender_rgb=True):
     """Creates a blender object with 3 colored axes to visualize a 4x4 matrix that represent a 3D pose/transform.
 
     :param matrix: the matrix that will be visualized
@@ -150,7 +150,15 @@ def visualize_transform(matrix: Matrix, scale: float = 0.1):
     empty.matrix_world @= Matrix(matrix)
     empty.empty_display_size = scale
 
-    for axis, color in zip(axes, blender_rgb):
+    rgb = [
+        [1, 0, 0, 1.000000],
+        [0, 1, 0, 1.000000],
+        [0, 0, 1, 1.000000],
+    ]
+
+    colors = blender_rgb if use_blender_rgb else rgb
+
+    for axis, color in zip(axes, colors):
         material = cylinders[axis].new_material("Material")
         material.set_principled_shader_value("Base Color", color)
         material.blender_obj.diffuse_color = color
@@ -179,3 +187,4 @@ def visualize_path(path, radius=0.002, color=[0.0, 1.0, 0.0, 1.0]):
     material = bproc_obj.new_material("Material")
     material.set_principled_shader_value("Base Color", color)
     material.blender_obj.diffuse_color = color
+    return bproc_obj

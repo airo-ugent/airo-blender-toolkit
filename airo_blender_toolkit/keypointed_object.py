@@ -80,7 +80,8 @@ class KeypointedObject(MeshObject):
             keypoints_json[key + suffix] = [list(c) for c in coords]
         return keypoints_json
 
-    def visualize_keypoints(self, radius=0.02):
+    def visualize_keypoints(self, radius=0.02, keypoints_color=None):
+
         n = len(self.keypoints_3D.keys())
 
         hues = [float(i) / n for i in range(n)]
@@ -92,6 +93,9 @@ class KeypointedObject(MeshObject):
             colors.append(color)
 
         for color, (category, keypoints) in zip(colors, self.keypoints_3D.items()):
+            if keypoints_color:
+                color = keypoints_color
+
             for keypoint in keypoints:
                 sphere = bproc.object.create_primitive("SPHERE", location=keypoint, radius=radius)
                 sphere.blender_obj.name = category
