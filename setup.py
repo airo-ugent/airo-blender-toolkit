@@ -1,5 +1,7 @@
 from setuptools import setup
 
+# rtree is required for trimesh
+
 setup(
     name="airo_blender_toolkit",
     author="Victor-Louis De Gusseme",
@@ -8,5 +10,5 @@ setup(
     description="Python package to faciliate the usage of the Blender python API @ AIRO UGent",
     url="https://github.com/airo-ugent/airo-blender-toolkit",
     packages=["airo_blender_toolkit"],
-    install_requires=["triangle", "trimesh", "requests", "scipy"],
+    install_requires=["rtree", "triangle", "trimesh", "requests", "scipy"],
 )
