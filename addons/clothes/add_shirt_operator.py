@@ -50,7 +50,7 @@ class AddShirt(bpy.types.Operator, AddObjectHelper):
         soft_min=1.0,
         soft_max=0.9,
         step=1,
-        default=0.95,
+        default=0.9,
     )
     sleeve_width_start: FloatProperty(
         name="sleeve_width_start",
