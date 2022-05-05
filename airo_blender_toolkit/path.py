@@ -59,6 +59,20 @@ class CartesianPath(ABC):
         return map
 
 
+class LinearPath(CartesianPath):
+    def __init__(self, start_position, end_position, orientation):
+        self.start_position = start_position
+        self.end_position = end_position
+        self.orientation = orientation
+        super().__init__()
+
+    def _pose(self, path_parameter=0.5):
+        t = path_parameter
+        position = (1.0 - t) * self.start_position + t * self.end_position
+        pose = abt.Frame.from_orientation_and_position(self.orientation, position)
+        return pose
+
+
 class TiltedEllipticalArcPath(CartesianPath):
     def __init__(
         self,

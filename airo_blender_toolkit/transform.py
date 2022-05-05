@@ -187,4 +187,4 @@ def visualize_path(path, radius=0.002, color=[0.0, 1.0, 0.0, 1.0]):
     material = bproc_obj.new_material("Material")
     material.set_principled_shader_value("Base Color", color)
     material.blender_obj.diffuse_color = color
-    return bproc_obj
+    return bproc_obj, material
