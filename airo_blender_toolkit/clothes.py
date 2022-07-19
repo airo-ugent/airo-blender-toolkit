@@ -8,6 +8,32 @@ from airo_blender_toolkit.keypointed_object import KeypointedObject
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 
 
+class Towel(KeypointedObject):
+    keypoint_ids = {"corner": [0, 1, 2, 3]}
+
+    def __init__(self, length, width):
+        self.width = width
+        self.length = length
+
+        mesh = self._create_mesh()
+        blender_obj = abt.make_object(name="Towel", mesh=mesh)
+        super().__init__(blender_obj, Towel.keypoint_ids)
+
+    def _create_mesh(self):
+        width, length = float(self.width), float(self.length)
+
+        vertices = [
+            np.array([-width / 2, -length / 2, 0.0]),
+            np.array([-width / 2, length / 2, 0.0]),
+            np.array([width / 2, length / 2, 0.0]),
+            np.array([width / 2, -length / 2, 0.0]),
+        ]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 0)]
+        faces = [(0, 1, 2, 3)]
+
+        return vertices, edges, faces
+
+
 class PolygonalShirt(KeypointedObject):
     def __init__(
         self,
@@ -107,3 +133,4 @@ class PolygonalShirt(KeypointedObject):
 
 if __name__ == "__main__":
     PolygonalShirt()
+    Towel()

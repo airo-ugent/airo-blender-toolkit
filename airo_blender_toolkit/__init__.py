@@ -1,6 +1,6 @@
 import airo_blender_toolkit.camera as camera
 import airo_blender_toolkit.colors as colors
-from airo_blender_toolkit.clothes import PolygonalShirt
+from airo_blender_toolkit.clothes import PolygonalShirt, Towel
 from airo_blender_toolkit.datastructures import InterpolatingDict
 from airo_blender_toolkit.gripper import BlockGripper, Gripper
 from airo_blender_toolkit.hdri import download_hdri, load_hdri
@@ -47,6 +47,7 @@ __all__ = (
     "TiltedEllipticalArcPath",
     "InterpolatingDict",
     "PolygonalShirt",
+    "Towel",
     "Gripper",
     "BlockGripper",
     "triangulate",
