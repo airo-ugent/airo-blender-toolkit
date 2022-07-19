@@ -10,7 +10,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-from . import add_shirt_operator, add_towel_operator
+from . import add_pants_operator, add_shirt_operator, add_towel_operator
 
 bl_info = {
     "name": "Clothes",
@@ -27,8 +27,10 @@ bl_info = {
 def register():
     add_towel_operator.register()
     add_shirt_operator.register()
+    add_pants_operator.register()
 
 
 def unregister():
     add_towel_operator.unregister()
     add_shirt_operator.unregister()
+    add_pants_operator.unregister()

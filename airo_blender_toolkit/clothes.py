@@ -6,6 +6,7 @@ import airo_blender_toolkit as abt
 from airo_blender_toolkit.keypointed_object import KeypointedObject
 
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
+import blenderproc as bproc  # noqa: E402
 
 
 class Towel(KeypointedObject):
@@ -131,6 +132,73 @@ class PolygonalShirt(KeypointedObject):
         return blender_object
 
 
+class PolygonalPants(KeypointedObject):
+    def __init__(
+        self,
+        waist_width=0.4,
+        crotch_depth=0.2,
+        pipe_angle=10,
+        pipe_length=0.8,
+        pipe_bottom_width=0.1,
+        scale=0.635,
+    ):
+        self.waist_width = waist_width
+        self.crotch_depth = crotch_depth
+        self.pipe_angle = pipe_angle
+        self.pipe_length = pipe_length
+        self.pipe_bottom_width = pipe_bottom_width
+        self.scale = scale
+
+        self.blender_object = self.make_pants_object()
+
+        keypoint_ids = {
+            "crotch": [0],
+            "pipe_right_bottom_left": [1],
+            "pipe_right_bottom_right": [2],
+            "waist_right": [3],
+            "waist_left": [4],
+            "pipe_left_bottom_left": [5],
+            "pipe_left_bottom_right": [6],
+        }
+
+        super().__init__(self.blender_object, keypoint_ids)
+
+    def make_pants_object(self):
+        # First we make the right half of the pants
+        waist_right = np.array([self.waist_width / 2.0, 0.0, 0.0])
+        crotch = np.array([0.0, -self.crotch_depth, 0.0])
+
+        angle = np.deg2rad(self.pipe_angle)
+
+        pipe_start = np.array([self.pipe_bottom_width / 2.0, 0.0, 0.0])
+        pipe_direction = np.array([np.sin(angle) * self.pipe_length, -np.cos(angle) * self.pipe_length, 0.0])
+
+        pipe_bottom_middle = pipe_start + pipe_direction
+        offset = np.cross(pipe_direction, np.array([0.0, 0.0, 1.0]))
+        offset /= np.linalg.norm(offset)
+        offset *= self.pipe_bottom_width / 2.0
+        pipe_bottom_left = pipe_bottom_middle + offset
+        pipe_bottom_right = pipe_bottom_middle - offset
+
+        vertices = [crotch, pipe_bottom_left, pipe_bottom_right, waist_right]
+
+        for vertex in reversed(vertices[1:]):
+            mirrored_vertex = vertex.copy()
+            mirrored_vertex[0] *= -1
+            vertices.append(mirrored_vertex)
+
+        vertices = np.array(vertices)
+        vertices[:, 1] -= pipe_bottom_left[1] / 2.0
+        vertices *= self.scale
+
+        faces = [list(range(len(vertices)))]
+        mesh = vertices, [], faces
+        blender_object = abt.make_object("Pants", mesh)
+        return blender_object
+
+
 if __name__ == "__main__":
-    PolygonalShirt()
-    Towel()
+    # PolygonalShirt()
+    bproc.init()
+    PolygonalPants()
+    # Towel()
