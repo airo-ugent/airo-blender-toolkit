@@ -1,5 +1,6 @@
 import airo_blender_toolkit.camera as camera
 import airo_blender_toolkit.colors as colors
+from airo_blender_toolkit.assets import assets_path
 from airo_blender_toolkit.clothes import PolygonalPants, PolygonalShirt, Towel
 from airo_blender_toolkit.datastructures import InterpolatingDict
 from airo_blender_toolkit.gripper import BlockGripper, Gripper
@@ -55,4 +56,5 @@ __all__ = (
     "triangulate_blender_object",
     "show_wireframes",
     "visualize_line",
+    "assets_path",
 )
