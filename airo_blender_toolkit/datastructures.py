@@ -15,8 +15,8 @@ class InterpolatingDict(dict):
         key_low = sorted_keys[index - 1]
         key_high = sorted_keys[index]
         key_range = key_high - key_low
-        fraction_low = (key - key_low) / key_range
-        fraction_high = (key_high - key) / key_range
+        fraction_high = (key - key_low) / key_range
+        fraction_low = (key_high - key) / key_range
         value_low = dict.__getitem__(self, key_low)
         value_high = dict.__getitem__(self, key_high)
         value = fraction_low * value_low + fraction_high * value_high

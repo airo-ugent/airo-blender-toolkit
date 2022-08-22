@@ -10,6 +10,7 @@ import blenderproc as bproc  # noqa: E402
 
 
 class Towel(KeypointedObject):
+    classification_name = "towel"
     keypoint_ids = {"corner": [0, 1, 2, 3]}
 
     def __init__(self, length, width):
@@ -17,8 +18,8 @@ class Towel(KeypointedObject):
         self.length = length
 
         mesh = self._create_mesh()
-        blender_obj = abt.make_object(name="Towel", mesh=mesh)
-        super().__init__(blender_obj, Towel.keypoint_ids)
+        blender_obj = abt.make_object(name=self.classification_name, mesh=mesh)
+        super().__init__(blender_obj, self.keypoint_ids)
 
     def _create_mesh(self):
         width, length = float(self.width), float(self.length)
@@ -36,6 +37,23 @@ class Towel(KeypointedObject):
 
 
 class PolygonalShirt(KeypointedObject):
+    classification_name = "shirt"
+    keypoint_ids = {
+        "bottom_right": [0],
+        "armpit_right": [1],
+        "sleeve_bottom_right": [2],
+        "sleeve_top_right": [3],
+        "shoulder_right": [4],
+        "neck_right": [5],
+        "neck_middle": [6],
+        "neck_left": [7],
+        "shoulder_left": [8],
+        "sleeve_top_left": [9],
+        "sleeve_bottom_left": [10],
+        "armpit_left": [11],
+        "bottom_left": [12],
+    }
+
     def __init__(
         self,
         bottom_width=0.65,
@@ -61,24 +79,7 @@ class PolygonalShirt(KeypointedObject):
         self.scale = scale
 
         self.blender_object = self.make_shirt_object()
-
-        keypoint_ids = {
-            "bottom_right": [0],
-            "armpit_right": [1],
-            "sleeve_bottom_right": [2],
-            "sleeve_top_right": [3],
-            "shoulder_right": [4],
-            "neck_right": [5],
-            "neck_middle": [6],
-            "neck_left": [7],
-            "shoulder_left": [8],
-            "sleeve_top_left": [9],
-            "sleeve_bottom_left": [10],
-            "armpit_left": [11],
-            "bottom_left": [12],
-        }
-
-        super().__init__(self.blender_object, keypoint_ids)
+        super().__init__(self.blender_object, self.keypoint_ids)
 
     def make_shirt_object(self):
         # First we make the right half of the shirt
@@ -128,11 +129,22 @@ class PolygonalShirt(KeypointedObject):
 
         faces = [list(range(len(vertices)))]
         mesh = vertices, [], faces
-        blender_object = abt.make_object("Shirt", mesh)
+        blender_object = abt.make_object(self.classification_name, mesh)
         return blender_object
 
 
 class PolygonalPants(KeypointedObject):
+    classification_name = "pants"
+    keypoint_ids = {
+        "crotch": [0],
+        "pipe_right_bottom_left": [1],
+        "pipe_right_bottom_right": [2],
+        "waist_right": [3],
+        "waist_left": [4],
+        "pipe_left_bottom_left": [5],
+        "pipe_left_bottom_right": [6],
+    }
+
     def __init__(
         self,
         waist_width=0.4,
@@ -150,18 +162,7 @@ class PolygonalPants(KeypointedObject):
         self.scale = scale
 
         self.blender_object = self.make_pants_object()
-
-        keypoint_ids = {
-            "crotch": [0],
-            "pipe_right_bottom_left": [1],
-            "pipe_right_bottom_right": [2],
-            "waist_right": [3],
-            "waist_left": [4],
-            "pipe_left_bottom_left": [5],
-            "pipe_left_bottom_right": [6],
-        }
-
-        super().__init__(self.blender_object, keypoint_ids)
+        super().__init__(self.blender_object, PolygonalPants.keypoint_ids)
 
     def make_pants_object(self):
         # First we make the right half of the pants
@@ -193,7 +194,7 @@ class PolygonalPants(KeypointedObject):
 
         faces = [list(range(len(vertices)))]
         mesh = vertices, [], faces
-        blender_object = abt.make_object("Pants", mesh)
+        blender_object = abt.make_object(self.classification_name, mesh)
         return blender_object
 
 
