@@ -44,13 +44,15 @@ class BlenderObject(ABC):
     def add_material(self, required_tags=[]):
         # Load a random asset with the required tags.
         assets = abt.assets()
-        assets = [m for m in assets if m.type == "material"]
+        assets = [m for m in assets if m.type == "materials"]
 
         assets_with_required_tags = []
         for asset in assets:
             tags = asset.tags
             if all((required_tag in tags) for required_tag in required_tags):
                 assets_with_required_tags.append(asset)
+
+        assert len(assets_with_required_tags) != 0
 
         index = np.random.choice(len(assets_with_required_tags))
         asset = assets_with_required_tags[index]

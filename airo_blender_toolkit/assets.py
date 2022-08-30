@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import bpy
+import numpy as np
 from appdirs import user_cache_dir
 from diskcache import Cache
 
@@ -30,10 +31,10 @@ class Asset:
 
     def load(self):
         with bpy.data.libraries.load(str(self.source_file), assets_only=True) as (other_file, current_file):
-            if self.name not in other_file.materials:
-                raise Exception(f"No asset with name {self.name} found in {other_file}.")
-            current_file.materials.append(self.name)
-        return bpy.data.materials[self.name]
+            if self.name not in getattr(other_file, self.type):
+                raise Exception(f"No asset with name {self.name} found in {self.source_file}.")
+            getattr(current_file, self.type).append(self.name)
+        return getattr(bpy.data, self.type)[self.name]
 
 
 def cache_directory():
@@ -106,35 +107,36 @@ def asset_cache_outdated():
         blend_files = list_blend_files(asset_library)
         asset_blend_files.update(blend_files)
 
-    return processed_blend_files == asset_blend_files
+    return not (processed_blend_files == asset_blend_files)
 
 
 def assets():
     if asset_cache_outdated():
+        print("Rebuilding asset cache, this can take a while.")
         rebuild_asset_cache()
 
     with Cache(cache_directory()) as cache:
         return cache["assets"]
 
 
+def filtered_assets(type, required_tags=[]):
+    def filter_condition(asset):
+        if asset.type != type:
+            return False
+        required_tags_present = all((required_tag in asset.tags) for required_tag in required_tags)
+        return required_tags_present
+
+    return [a for a in assets() if filter_condition(a)]
+
+
 class World(BlenderObject):
     def __init__(self, required_tags=[]):
-        pass
-        # import_asset_worlds()
-        # worlds = [w for w in bpy.data.worlds if w.asset_data]
-
-        # worlds_with_required_tags = []
-        # for world in worlds:
-        #     tags = world.asset_data.tags
-        #     if all((required_tag in tags) for required_tag in required_tags):
-        #         worlds_with_required_tags.append(world)
-
-        # index = np.random.choice(len(worlds_with_required_tags))
-        # world = worlds_with_required_tags[index]
-
-        # bpy.context.scene.world = world
-
-        # self.blender_object = world
+        assets = filtered_assets("worlds", required_tags)
+        index = np.random.choice(len(assets))
+        asset = assets[index]
+        world = asset.load()
+        bpy.context.scene.world = world
+        self.blender_object = world
 
 
 def load_thingi10k_object():
