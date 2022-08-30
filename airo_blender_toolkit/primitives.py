@@ -61,11 +61,13 @@ class BlenderObject(ABC):
         self.blender_object.data.materials.append(material)
 
         # Fix texture scale
-        override = bpy.context.copy()
-        override["material"] = material
-        with bpy.context.temp_override(**override):
-            val = bpy.ops.pha.tex_scale_fix()
-            print("val", val)
+        try:
+            override = bpy.context.copy()
+            override["material"] = material
+            with bpy.context.temp_override(**override):
+                bpy.ops.pha.tex_scale_fix()
+        except:  # noqa: E722
+            pass
 
         return material
 
