@@ -1,25 +1,74 @@
-import os
-
+import bpy
 import numpy as np
 
 import airo_blender_toolkit as abt
+from airo_blender_toolkit.coco_parser import CocoKeypointCategory
 from airo_blender_toolkit.keypointed_object import KeypointedObject
+from airo_blender_toolkit.primitives import BlenderObject
 
-os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
-import blenderproc as bproc  # noqa: E402
+# Same category ids as DeepFashion2 + 14: towel
+# category_ids_map = {
+#     "short_sleeved_shirt": 1,
+#     "long_sleeved_shirt": 2,
+#     "short_sleeved_outwear": 3,
+#     "long_sleeved_outwear": 4,
+#     "vest": 5,
+#     "sling": 6,
+#     "shorts": 7,
+#     "trousers": 8,
+#     "skirt": 9,
+#     "short_sleeved_dress": 10,
+#     "long_sleeved_dress": 11,
+#     "vest_dress": 12,
+#     "sling_dress": 13,
+#     "towel": 14,
+# }
+
+# TODO think about the redundancy here and in PolygonalShirt
+shirt_keypoints = [
+    "bottom_right",
+    "armpit_right",
+    "sleeve_bottom_right",
+    "sleeve_top_right",
+    "shoulder_right",
+    "neck_right",
+    "neck_middle",
+    "neck_left",
+    "shoulder_left",
+    "sleeve_top_left",
+    "sleeve_bottom_left",
+    "armpit_left",
+    "bottom_left",
+]
+
+short_sleeved_shirt = CocoKeypointCategory(
+    supercategory="clothes",
+    id=1,
+    name="short_sleeved_shirt",
+    keypoints=shirt_keypoints,
+    skeleton=[],  # TODO
+)
+
+long_sleeved_shirt = CocoKeypointCategory(
+    supercategory="clothes",
+    id=2,
+    name="long_sleeved_shirt",
+    keypoints=shirt_keypoints,
+    skeleton=[],  # TODO
+)
 
 
-class Towel(KeypointedObject):
-    classification_name = "towel"
-    keypoint_ids = {"corner": [0, 1, 2, 3]}
+class Towel(BlenderObject, KeypointedObject):
+    category = "towel"
+    keypoint_ids = {"corner0": 0, "corner1": 1, "corner2": 2, "corner3": 3}
 
     def __init__(self, length, width):
         self.width = width
         self.length = length
 
         mesh = self._create_mesh()
-        blender_obj = abt.make_object(name=self.classification_name, mesh=mesh)
-        super().__init__(blender_obj, self.keypoint_ids)
+        blender_object = abt.make_object(name=self.classification_name, mesh=mesh)
+        super().__init__(blender_object, self.keypoint_ids)
 
     def _create_mesh(self):
         width, length = float(self.width), float(self.length)
@@ -36,22 +85,21 @@ class Towel(KeypointedObject):
         return vertices, edges, faces
 
 
-class PolygonalShirt(KeypointedObject):
-    classification_name = "shirt"
+class PolygonalShirt(BlenderObject, KeypointedObject):
     keypoint_ids = {
-        "bottom_right": [0],
-        "armpit_right": [1],
-        "sleeve_bottom_right": [2],
-        "sleeve_top_right": [3],
-        "shoulder_right": [4],
-        "neck_right": [5],
-        "neck_middle": [6],
-        "neck_left": [7],
-        "shoulder_left": [8],
-        "sleeve_top_left": [9],
-        "sleeve_bottom_left": [10],
-        "armpit_left": [11],
-        "bottom_left": [12],
+        "bottom_right": 0,
+        "armpit_right": 1,
+        "sleeve_bottom_right": 2,
+        "sleeve_top_right": 3,
+        "shoulder_right": 4,
+        "neck_right": 5,
+        "neck_middle": 6,
+        "neck_left": 7,
+        "shoulder_left": 8,
+        "sleeve_top_left": 9,
+        "sleeve_bottom_left": 10,
+        "armpit_left": 11,
+        "bottom_left": 12,
     }
 
     def __init__(
@@ -76,10 +124,19 @@ class PolygonalShirt(KeypointedObject):
         self.sleeve_width_end = sleeve_width_end
         self.sleeve_length = sleeve_length
         self.sleeve_angle = sleeve_angle
-        self.scale = scale
 
         self.blender_object = self.make_shirt_object()
         super().__init__(self.blender_object, self.keypoint_ids)
+
+        self.scale = scale
+        abt.select_only(self.blender_object)
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+    @property
+    def category(self):
+        if self.sleeve_length > 0.5:
+            return long_sleeved_shirt
+        return short_sleeved_shirt
 
     def make_shirt_object(self):
         # First we make the right half of the shirt
@@ -125,24 +182,24 @@ class PolygonalShirt(KeypointedObject):
 
         vertices = np.array(vertices)
         vertices[:, 1] -= 0.5  # move origin to center of shirt
-        vertices *= self.scale
+        # vertices *= self.scale
 
         faces = [list(range(len(vertices)))]
         mesh = vertices, [], faces
-        blender_object = abt.make_object(self.classification_name, mesh)
+        blender_object = abt.make_object(self.category.name, mesh)
         return blender_object
 
 
 class PolygonalPants(KeypointedObject):
     classification_name = "pants"
     keypoint_ids = {
-        "crotch": [0],
-        "pipe_right_bottom_left": [1],
-        "pipe_right_bottom_right": [2],
-        "waist_right": [3],
-        "waist_left": [4],
-        "pipe_left_bottom_left": [5],
-        "pipe_left_bottom_right": [6],
+        "crotch": 0,
+        "pipe_right_bottom_left": 1,
+        "pipe_right_bottom_right": 2,
+        "waist_right": 3,
+        "waist_left": 4,
+        "pipe_left_bottom_left": 5,
+        "pipe_left_bottom_right": 6,
     }
 
     def __init__(
@@ -200,6 +257,5 @@ class PolygonalPants(KeypointedObject):
 
 if __name__ == "__main__":
     # PolygonalShirt()
-    bproc.init()
     PolygonalPants()
     # Towel()

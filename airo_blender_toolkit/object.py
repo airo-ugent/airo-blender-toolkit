@@ -16,8 +16,8 @@ def make_object(name, mesh):
     return object
 
 
-def cleanup_scene():
-    """Cleanup the scene by removing objects, orphan data and custom properties"""
+def clear_scene():
+    """Clear the active scene by removing objects, orphan data and custom properties"""
     remove_all_objects()
     remove_orphan_data()
 

@@ -24,14 +24,3 @@ Simply install the package as in a venv:
 ```
 pip3 install -e ~/airo-blender-toolkit
 ```
-
-## Installing BlenderProc
-Installing BlenderProc is a bit messy. I prefer to install it into the Blender python:
-
-```
-git clone git@github.com:DLR-RM/BlenderProc.git
-cd ~/BlenderProc
-git checkout develop
-git pull
-pip3 install -e ~/BlenderProc
-```

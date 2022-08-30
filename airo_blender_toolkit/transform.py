@@ -1,15 +1,10 @@
-import math
 import os
 
-import bpy
 import numpy as np
 from mathutils import Matrix
 from scipy.spatial.transform import Rotation
 
-from airo_blender_toolkit.object import select_only
-
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
-import blenderproc as bproc  # noqa: E402
 
 
 class Frame(np.ndarray):
@@ -93,29 +88,30 @@ def vectors_are_parallel(a, b):
 def visualize_line(
     origin, direction, thickness=0.005, length_forward=1.0, length_backward=1.0, color=(1.0, 1.0, 0.0, 1.0)
 ):
-    origin = np.array(origin)
-    direction = np.array(direction)
+    pass
+    # origin = np.array(origin)
+    # direction = np.array(direction)
 
-    length = length_forward + length_backward
-    cylinder = bproc.object.create_primitive("CYLINDER", radius=thickness, depth=length)
+    # length = length_forward + length_backward
+    # cylinder = bproc.object.create_primitive("CYLINDER", radius=thickness, depth=length)
 
-    Z = direction / np.linalg.norm(direction)
-    up = np.array([0.0, 0.0, 1.0])
+    # Z = direction / np.linalg.norm(direction)
+    # up = np.array([0.0, 0.0, 1.0])
 
-    X = up if not vectors_are_parallel(up, Z) else np.array([1.0, 0.0, 0.0])
-    X -= np.dot(Z, X) * Z
-    X /= np.linalg.norm(X)
-    Y = np.cross(Z, X)
+    # X = up if not vectors_are_parallel(up, Z) else np.array([1.0, 0.0, 0.0])
+    # X -= np.dot(Z, X) * Z
+    # X /= np.linalg.norm(X)
+    # Y = np.cross(Z, X)
 
-    center = origin + (length_forward * direction - length_backward * direction) / 2
-    frame = Frame.from_vectors(X, Y, Z, center)
-    cylinder.blender_obj.matrix_world = Matrix(frame)
+    # center = origin + (length_forward * direction - length_backward * direction) / 2
+    # frame = Frame.from_vectors(X, Y, Z, center)
+    # cylinder.blender_object.matrix_world = Matrix(frame)
 
-    material = cylinder.new_material("Material")
-    material.blender_obj.diffuse_color = color
-    material.set_principled_shader_value("Base Color", color)
+    # material = cylinder.new_material("Material")
+    # material.blender_object.diffuse_color = color
+    # material.set_principled_shader_value("Base Color", color)
 
-    return cylinder
+    # return cylinder
 
 
 def visualize_transform(matrix: Matrix, scale: float = 0.1, use_blender_rgb=True):
@@ -126,65 +122,66 @@ def visualize_transform(matrix: Matrix, scale: float = 0.1, use_blender_rgb=True
     :param scale: length in meters of an axis, defaults to 1.0
     :type scale: float, optional
     """
-    depth = 2.0 * scale
-    radius = 0.02 * depth
+    # depth = 2.0 * scale
+    # radius = 0.02 * depth
 
-    axes = ["X", "Y", "Z"]
-    cylinders = {}
+    # axes = ["X", "Y", "Z"]
+    # cylinders = {}
 
-    for axis in axes:
-        cylinder = bproc.object.create_primitive("CYLINDER", radius=radius, depth=depth)
-        cylinder.blender_obj.name = axis
-        cylinders[axis] = cylinder
-        shorten_cylinder(cylinder.blender_obj, radius)
+    # for axis in axes:
+    #     cylinder = bproc.object.create_primitive("CYLINDER", radius=radius, depth=depth)
+    #     cylinder.blender_object.name = axis
+    #     cylinders[axis] = cylinder
+    #     shorten_cylinder(cylinder.blender_obj, radius)
 
-    cylinders["X"].blender_obj.matrix_world @= Matrix.Rotation(math.pi / 2, 4, "Y")
-    cylinders["Y"].blender_obj.matrix_world @= Matrix.Rotation(-math.pi / 2, 4, "X")
+    # cylinders["X"].blender_object.matrix_world @= Matrix.Rotation(math.pi / 2, 4, "Y")
+    # cylinders["Y"].blender_object.matrix_world @= Matrix.Rotation(-math.pi / 2, 4, "X")
 
-    # Create Empty object to serve as parent of the axes
-    bpy.ops.object.empty_add(type="ARROWS", scale=(scale, scale, scale))
-    empty = bpy.context.object
-    for cylinder in cylinders.values():
-        cylinder.persist_transformation_into_mesh()
-        cylinder.blender_obj.parent = empty
-    empty.matrix_world @= Matrix(matrix)
-    empty.empty_display_size = scale
+    # # Create Empty object to serve as parent of the axes
+    # bpy.ops.object.empty_add(type="ARROWS", scale=(scale, scale, scale))
+    # empty = bpy.context.object
+    # for cylinder in cylinders.values():
+    #     cylinder.persist_transformation_into_mesh()
+    #     cylinder.blender_object.parent = empty
+    # empty.matrix_world @= Matrix(matrix)
+    # empty.empty_display_size = scale
 
-    rgb = [
-        [1, 0, 0, 1.000000],
-        [0, 1, 0, 1.000000],
-        [0, 0, 1, 1.000000],
-    ]
+    # rgb = [
+    #     [1, 0, 0, 1.000000],
+    #     [0, 1, 0, 1.000000],
+    #     [0, 0, 1, 1.000000],
+    # ]
 
-    colors = blender_rgb if use_blender_rgb else rgb
+    # colors = blender_rgb if use_blender_rgb else rgb
 
-    for axis, color in zip(axes, colors):
-        material = cylinders[axis].new_material("Material")
-        material.set_principled_shader_value("Base Color", color)
-        material.blender_obj.diffuse_color = color
+    # for axis, color in zip(axes, colors):
+    #     material = cylinders[axis].new_material("Material")
+    #     material.set_principled_shader_value("Base Color", color)
+    #     material.blender_object.diffuse_color = color
 
-    return empty
+    # return empty
 
 
 def visualize_path(path, radius=0.002, color=[0.0, 1.0, 0.0, 1.0]):
-    vertices = [path.pose(i).position for i in np.linspace(0, 1, 50)]
-    edges = [(i, i + 1) for i in range(len(vertices) - 1)]
-    faces = []
-    mesh = bpy.data.meshes.new("Path")
-    mesh.from_pydata(vertices, edges, faces)
-    mesh.update()
-    object = bpy.data.objects.new("Path", mesh)
-    bpy.context.collection.objects.link(object)
+    pass
+    # vertices = [path.pose(i).position for i in np.linspace(0, 1, 50)]
+    # edges = [(i, i + 1) for i in range(len(vertices) - 1)]
+    # faces = []
+    # mesh = bpy.data.meshes.new("Path")
+    # mesh.from_pydata(vertices, edges, faces)
+    # mesh.update()
+    # object = bpy.data.objects.new("Path", mesh)
+    # bpy.context.collection.objects.link(object)
 
-    select_only(object)
-    bpy.ops.object.modifier_add(type="SKIN")
+    # select_only(object)
+    # bpy.ops.object.modifier_add(type="SKIN")
 
-    for vertex in object.data.vertices:
-        skin_vertex = object.data.skin_vertices[""].data[vertex.index]
-        skin_vertex.radius = (radius, radius)
+    # for vertex in object.data.vertices:
+    #     skin_vertex = object.data.skin_vertices[""].data[vertex.index]
+    #     skin_vertex.radius = (radius, radius)
 
-    bproc_obj = bproc.python.types.MeshObjectUtility.MeshObject(object)
-    material = bproc_obj.new_material("Material")
-    material.set_principled_shader_value("Base Color", color)
-    material.blender_obj.diffuse_color = color
-    return bproc_obj, material
+    # bproc_obj = bproc.python.types.MeshObjectUtility.MeshObject(object)
+    # material = bproc_obj.new_material("Material")
+    # material.set_principled_shader_value("Base Color", color)
+    # material.blender_object.diffuse_color = color
+    # return bproc_obj, material
