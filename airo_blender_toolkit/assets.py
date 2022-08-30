@@ -9,9 +9,9 @@ from diskcache import Cache
 from airo_blender_toolkit.primitives import BlenderObject
 
 
-def asset_identifier(asset_library_name, asset_name):
+def asset_identifier(asset_library_name, asset_type, asset_name):
     """A uniqie identifier for the asset. Assumes that no two assets in the same library have the same name."""
-    return f"{asset_library_name} {asset_name}"
+    return f"{asset_library_name} {asset_type} {asset_name}"
 
 
 class Asset:
@@ -23,11 +23,11 @@ class Asset:
         self.source_file = source_file
 
     def __str__(self):
-        return f"{self.name}: a {self.type} asset from {self.library_name} with tags: \n {self.tags}"
+        return f"{self.name}: a {self.type[:-1]} from {self.library_name} with tags: \n {self.tags}"
 
     @property
     def id(self):
-        return asset_identifier(self.library_name, self.name)
+        return asset_identifier(self.library_name, self.type, self.name)
 
     def load(self):
         with bpy.data.libraries.load(str(self.source_file), assets_only=True) as (other_file, current_file):
@@ -42,61 +42,87 @@ def cache_directory():
 
 
 def update_asset_cache():
-    with Cache(cache_directory()) as asset_cache:
+    with Cache(cache_directory()) as cache:
         # adapted from: https://blender.stackexchange.com/questions/244971
-        prefs = bpy.context.preferences
-        filepaths = prefs.filepaths
-        asset_libraries = filepaths.asset_libraries
+        asset_libraries = bpy.context.preferences.filepaths.asset_libraries
 
-        # These are the result of printing dir(other_file) in the loop below.
-        # ['Hair Curves', 'actions', 'armatures', 'brushes', 'cache_files', 'cameras', 'collections', 'curves',
-        # 'fonts', 'grease_pencils', 'images', 'lattices', 'lightprobes', 'lights', 'linestyles', 'masks', 'materials',
-        # 'meshes', 'metaballs', 'movieclips', 'node_groups', 'objects', 'paint_curves', 'palettes', 'particles',
-        # 'pointclouds', 'scenes', 'screens', 'simulations', 'sounds', 'speakers', 'texts', 'textures', 'volumes',
-        # 'workspaces', 'worlds']
+        if "assets" not in cache:
+            cache["assets"] = {}
+
+        if "blend_files" not in cache:
+            cache["blend_files"] = set()
+
+        asset_cache = cache["assets"]  # dictionary
+        blend_file_cache = cache["blend_files"]  # list of paths
 
         # The 6 asset types in the filter dropdown in the Asset Browser
         asset_types = [
-            "action",
+            "actions",
             "collections",
             "materials",
             "node_groups",
             "objects",
             "worlds",
         ]
-        print(asset_types)
 
         for asset_library in asset_libraries:
             library_name = asset_library.name
             library_path = Path(asset_library.path)
-            blend_files = [fp for fp in library_path.glob("**/*.blend") if fp.is_file()]
-            print(f"Checking the content of library '{library_name}' :")
+            blend_files = [str(path) for path in library_path.glob("**/*.blend") if path.is_file()]
+            blend_file_cache.update(blend_files)
             for blend_file in blend_files:
-                materials_to_be_processed = []
-                with bpy.data.libraries.load(str(blend_file), assets_only=True) as (other_file, current_file):
-                    for material_name in other_file.materials:
-                        asset_id = asset_identifier(library_name, material_name)
-                        if asset_id not in asset_cache:
-                            current_file.materials.append(material_name)
-                            materials_to_be_processed.append(material_name)
+                assets_to_be_processed = {asset_type: [] for asset_type in asset_types}
+                with bpy.data.libraries.load(blend_file, assets_only=True) as (other_file, current_file):
+                    for asset_type in asset_types:
+                        for asset_name in getattr(other_file, asset_type):
+                            asset_id = asset_identifier(library_name, asset_type, asset_name)
+                            if asset_id not in asset_cache:
+                                getattr(current_file, asset_type).append(asset_name)
+                                assets_to_be_processed[asset_type].append(asset_name)
 
-                for material_name in materials_to_be_processed:
-                    material = bpy.data.materials[material_name]
-                    asset = Asset(
-                        material_name,
-                        library_name,
-                        "material",
-                        [t.name for t in material.asset_data.tags],
-                        str(blend_file),
-                    )
-                    asset_cache[asset.id] = asset
-                    bpy.data.materials.remove(material)
+                for asset_type, asset_names in assets_to_be_processed.items():
+                    for asset_name in asset_names:
+                        bpy_data_collection = getattr(bpy.data, asset_type)
+                        asset = bpy_data_collection[asset_name]
+                        asset_info = Asset(
+                            asset_name,
+                            library_name,
+                            asset_type,
+                            [t.name for t in asset.asset_data.tags],
+                            str(blend_file),
+                        )
+                        asset_cache[asset_info.id] = asset_info
+                        bpy_data_collection.remove(asset)
+
+        cache["blend_files"] = blend_file_cache
+        cache["assets"] = asset_cache
 
 
-def get_assets():
-    update_asset_cache()
-    with Cache(cache_directory()) as asset_cache:
-        assets = [asset_cache[key] for key in list(asset_cache)]
+def asset_cache_up_to_date():
+    with Cache(cache_directory()) as cache:
+        if "blend_files" not in cache:
+            return False
+        blend_file_cache = cache["blend_files"]  # list of paths
+
+    asset_blend_files = []
+    asset_libraries = bpy.context.preferences.filepaths.asset_libraries
+    for asset_library in asset_libraries:
+        library_path = Path(asset_library.path)
+        blend_files = [str(path) for path in library_path.glob("**/*.blend") if path.is_file()]
+        asset_blend_files.extend(blend_files)
+
+    blend_files_changed = any(file not in blend_file_cache for file in asset_blend_files)
+    return not blend_files_changed
+
+
+def assets():
+    if not asset_cache_up_to_date():
+        print("Updating assets.")
+        update_asset_cache()
+
+    with Cache(cache_directory()) as cache:
+        asset_cache = cache["assets"]
+        assets = list(asset_cache.values())
     return assets
 
 

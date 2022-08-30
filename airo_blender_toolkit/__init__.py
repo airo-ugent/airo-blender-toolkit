@@ -1,6 +1,6 @@
 import airo_blender_toolkit.camera as camera
 import airo_blender_toolkit.colors as colors
-from airo_blender_toolkit.assets import World, get_assets, load_thingi10k_object
+from airo_blender_toolkit.assets import World, assets, load_thingi10k_object
 from airo_blender_toolkit.camera import Camera
 from airo_blender_toolkit.clothes import PolygonalPants, PolygonalShirt, Towel
 from airo_blender_toolkit.colors import random_hsv
@@ -69,5 +69,5 @@ __all__ = (
     "point_on_sphere",
     "Sphere",
     "IcoSphere",
-    "get_assets",
+    "assets",
 )

@@ -43,7 +43,7 @@ class BlenderObject(ABC):
 
     def add_material(self, required_tags=[]):
         # Load a random asset with the required tags.
-        assets = abt.get_assets()
+        assets = abt.assets()
         assets = [m for m in assets if m.type == "material"]
 
         assets_with_required_tags = []
