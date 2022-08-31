@@ -71,22 +71,6 @@ class BlenderObject(ABC):
 
         return material
 
-        # material = abt.Asset(type="material", required_tags=[])
-        # abt.import_asset_materials()
-        # materials = [m for m in bpy.data.materials if m.asset_data]
-
-        # materials_with_required_tags = []
-        # for material in materials:
-        #     tags = material.asset_data.tags
-        #     if all((required_tag in tags) for required_tag in required_tags):
-        #         materials_with_required_tags.append(material)
-
-        # index = np.random.choice(len(materials_with_required_tags))
-        # material = materials_with_required_tags[index]
-
-        # self.blender_object.data.materials.append(material)
-        # return material
-
 
 class Plane(BlenderObject):
     def __init__(self, size=2.0, location=(0.0, 0.0, 0.0), rotation=(0.0, 0.0, 0.0), scale=1.0):
