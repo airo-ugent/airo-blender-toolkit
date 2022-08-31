@@ -40,3 +40,32 @@ cd ~/blender-3.2.1-linux-x64/3.2/python/bin
 ./python3.10 -m ensurepip
 ./pip3 install -e ~/airo-blender-toolkit
 ```
+
+## Usage
+
+```python
+import airo_blender_toolkit as abt
+import numpy as np
+
+# Creating primitives
+plane = abt.Plane()
+abt.Sphere()
+abt.IcoSphere()
+
+# Transforming objects
+plane.location = (0.0, 0,0, 0.5)
+plane.rotation_euler = [0, np.pi / 2.0, 0.0]
+
+
+# Accesing the raw Blender Object
+plane.blender_object
+
+# Cameras
+camera = abt.Camera()
+camera.look_at(plane.location)
+camera.focal_length = 20
+```
+
+Design choices:
+* Our wrapper class attributes generally generally match those of the underlying classes e.g. with `object.location` and `object.rotation_euler`
+* However we sometimes deviate and also remove intermediate `.data`: e.g. `camera.data.lens` became `camera.focal_length`.

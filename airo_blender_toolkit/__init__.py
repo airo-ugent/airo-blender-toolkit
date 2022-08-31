@@ -1,6 +1,6 @@
 import airo_blender_toolkit.camera as camera
 import airo_blender_toolkit.colors as colors
-from airo_blender_toolkit.assets import World, assets, load_thingi10k_object
+from airo_blender_toolkit.assets import World, assets
 from airo_blender_toolkit.camera import Camera
 from airo_blender_toolkit.clothes import PolygonalPants, PolygonalShirt, Towel
 from airo_blender_toolkit.colors import random_hsv
@@ -61,7 +61,6 @@ __all__ = (
     "show_wireframes",
     "visualize_line",
     "random_hsv",
-    "load_thingi10k_object",
     "Plane",
     "clear_scene",
     "World",

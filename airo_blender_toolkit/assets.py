@@ -1,4 +1,15 @@
+""" Module that provides an API for the Blender Asset Browser.
+It works by first building a cache of all available assets.
+This is slow (e.g. 15s for the Poly Haven Assets) because it requires opening all Blend files with assets.
+However this only happens when the names of the Blend files present in the Asset Libraries change.
+To force the cache to update, delete the ~/.cache/airo-blender-toolkit folder.
+
+After the cache if built, it can be used to filter assets by type and tags.
+The chosen assets can then easily be loaded with asset.load()
+"""
+
 from pathlib import Path
+from typing import Dict, List
 
 import bpy
 import numpy as np
@@ -19,6 +30,8 @@ asset_types = [
 
 
 class Asset:
+    """This class contains the information needed to filter and load an Asset from disk."""
+
     def __init__(self, name, library_name, type, tags, source_file):
         self.name = name
         self.library_name = library_name
@@ -30,6 +43,11 @@ class Asset:
         return f"{self.name}: a {self.type[:-1]} from {self.library_name} with tags: \n {self.tags}"
 
     def load(self):
+        """Load the Asset from disk into the open Blend file.
+
+        Returns:
+            The raw Blender object that was loaded.
+        """
         with bpy.data.libraries.load(str(self.source_file), assets_only=True) as (other_file, current_file):
             if self.name not in getattr(other_file, self.type):
                 raise Exception(f"No asset with name {self.name} found in {self.source_file}.")
@@ -41,7 +59,15 @@ def cache_directory():
     return user_cache_dir("airo-blender-toolkit", "airo")
 
 
-def load_blend_file_assets(blend_file):
+def load_blend_file_assets(blend_file: str) -> Dict[str, List[str]]:
+    """Load all the assets from a given Blend file into the current.
+
+    Args:
+        blend_file (str): Blend file from which the assets will be loaded.
+
+    Returns:
+        dict: a dictoionary with the assets that were loaded, stored in lists per asset type.
+    """
     assets_to_be_processed = {asset_type: [] for asset_type in asset_types}
     with bpy.data.libraries.load(blend_file, assets_only=True) as (other_file, current_file):
         for asset_type in asset_types:
@@ -51,7 +77,18 @@ def load_blend_file_assets(blend_file):
     return assets_to_be_processed
 
 
-def process_assets(assets_to_be_processed, library_name, blend_file):
+def process_assets(assets_to_be_processed: Dict[str, List[str]], library_name: str, blend_file: str) -> List[Asset]:
+    """Processes assets into Asset objects that can be cached. At the end the assets are removed from the current blend
+    file to free up memory.
+
+    Args:
+        assets_to_be_processed (Dict[str, List[str]]): output of load_blend_file_assets(blend_file)
+        library_name (str): name of the Asset Library the assets belong to
+        blend_file (str): name of the Blend file where the assets come from
+
+    Returns:
+        List[Asset]: list of the extracted Assets
+    """
     processed_assets = []
     for asset_type, asset_names in assets_to_be_processed.items():
         for asset_name in asset_names:
@@ -69,13 +106,24 @@ def process_assets(assets_to_be_processed, library_name, blend_file):
     return processed_assets
 
 
-def list_blend_files(asset_library):
+def list_blend_files(asset_library: str) -> List[str]:
+    """Recursively list all blend file in a directory.
+
+    Args:
+        asset_library (str): The top-level directory of wehre to start searching.
+
+    Returns:
+        List[str]: paths to the blend files
+    """
     library_path = Path(asset_library.path)
     blend_files = [str(path) for path in library_path.glob("**/*.blend") if path.is_file()]
     return blend_files
 
 
 def rebuild_asset_cache():
+    """Replace the old asset cache with the new one. The asset cache contains a list this the info of all found assets
+    and also a list with the blend file in which these assets where found.
+    """
     with Cache(cache_directory()) as cache:
         assets = []
         processed_blend_files = set()
@@ -96,6 +144,11 @@ def rebuild_asset_cache():
 
 
 def asset_cache_outdated():
+    """Checks whether the cached blend files match with the blend files found in the Asset Libraries.
+
+    Returns:
+        bool: whether the cache is outdated.
+    """
     with Cache(cache_directory()) as cache:
         if "processed_blend_files" not in cache:
             return True
@@ -110,7 +163,12 @@ def asset_cache_outdated():
     return not (processed_blend_files == asset_blend_files)
 
 
-def assets():
+def assets() -> List[Asset]:
+    """Returns a list with all the assets that where found in the Asset libraries.
+
+    Returns:
+        List[Asset]: The list of assets.
+    """
     if asset_cache_outdated():
         print("Rebuilding asset cache, this can take a while.")
         rebuild_asset_cache()
@@ -119,7 +177,17 @@ def assets():
         return cache["assets"]
 
 
-def filtered_assets(type, required_tags=[]):
+def filtered_assets(type: str, required_tags: List[str] = []) -> List[Asset]:
+    """Filters through all assets and returns those with required type and tags.
+
+    Args:
+        type (str): the type of asset to return, one of: actions, collections, materials, node_groups, objects, worlds.
+        required_tags (List[str], optional): The tags that are required for all returned assets. Defaults to [].
+
+    Returns:
+        List[Asset]: List of the assets that match the requirements.
+    """
+
     def filter_condition(asset):
         if asset.type != type:
             return False
@@ -137,21 +205,3 @@ class World(BlenderObject):
         world = asset.load()
         bpy.context.scene.world = world
         self.blender_object = world
-
-
-def load_thingi10k_object():
-    pass
-    # thingi_folder = os.path.join(assets_path(), "thingi10k")
-    # random_object_name = get_random_filename(thingi_folder)
-    # print(random_object_name)
-    # bpy.ops.import_mesh.stl(filepath=os.path.join(thingi_folder, random_object_name))
-    # obj = bpy.context.selected_objects[0]
-    # bb_vertex = obj.matrix_world @ (Vector(obj.bound_box[6]) - Vector(obj.bound_box[0]))
-    # bb_vertex = [abs(x) for x in bb_vertex]
-    # obj.scale = np.array([0.1 / (bb_vertex[0]), 0.1 / (bb_vertex[1]), 0.1 / (bb_vertex[2])]) * np.random.uniform(
-    #     0.5, 3.0
-    # )
-    # obj.location = (np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), 0)
-    # material = bpy.data.materials.new(name=random_object_name)
-    # material.diffuse_color = random_hsv()
-    # obj.data.materials.append(material)
