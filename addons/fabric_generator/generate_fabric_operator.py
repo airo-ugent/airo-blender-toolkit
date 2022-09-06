@@ -2,6 +2,7 @@ import os
 import sys
 
 import bpy
+import numpy as np
 from bpy.types import Operator, Panel
 
 import airo_blender_toolkit as abt
@@ -11,9 +12,19 @@ home = os.path.expanduser("~")
 substance_path = os.path.join(home, ".config", "blender", "3.2", "scripts", "addons", "Substance3DInBlender")
 sys.path.insert(0, substance_path)
 from Substance3DInBlender.api import SUBSTANCE_Api, SUBSTANCE_Utils  # noqa: E402
+from Substance3DInBlender.common import RENDER_KEY  # noqa: E402
 
 if not SUBSTANCE_Api.is_running:
     _result = SUBSTANCE_Api.initialize()
+
+# This function of the SUBSTANCE_Api is replaced to make these update synchronous.
+# When async was enabled, not all parameter changes where executed.
+def sbsar_parm_update_edited(cls, context, sbsar_id, graph_idx, graph_id, parm, value, output_size, callback):  # noqa
+    _render_id = RENDER_KEY.format(sbsar_id, graph_idx)
+    return callback(context, _render_id, sbsar_id, graph_idx, graph_id, parm, value, output_size)
+
+
+SUBSTANCE_Api.sbsar_parm_update = sbsar_parm_update_edited
 
 
 # Not sure where to place this:
@@ -32,6 +43,8 @@ class VIEW3D_OT_generate_fabrics(Operator):
     _timer = None
     duplication_started = False
 
+    finalized = False
+
     amount: bpy.props.IntProperty(
         name="amount", description="Amount of materials that will be generated.", default=1, min=1, soft_max=50  # noqa
     )
@@ -39,8 +52,8 @@ class VIEW3D_OT_generate_fabrics(Operator):
     sbsar_path: bpy.props.StringProperty(name="SBSAR Path", subtype="FILE_PATH", default=default_sbsar_path)  # noqa
 
     def _finalize(self, context):
-        wm = context.window_manager
-        wm.event_timer_remove(self._timer)
+        # wm = context.window_manager
+        # wm.event_timer_remove(self._timer)
         self._visualize_materials()
         for material_name in self.materials:
             self._randomize_material(context, material_name)
@@ -48,20 +61,28 @@ class VIEW3D_OT_generate_fabrics(Operator):
         context.scene.render.engine = "CYCLES"
         abt.World()
 
+        for image in bpy.data.images:
+            image.reload()
+
     def _randomize_material(self, context, material_name):
         sbsar = context.scene.loaded_sbsars[material_name]
         graph = sbsar.graphs["Material"]
         graph.tiling.x = 1
 
         sbsar_index = context.scene.loaded_sbsars.find(material_name)
-        print("index", sbsar_index)
+        print("index", sbsar_index, graph.parms_class_name)
 
-        print(graph.parms["enable_horizontal_1"])
+        # print(graph.parms["enable_horizontal_1"])
 
-        graph.enable_horizontal_1 = "0"
+        # graph.enable_horizontal_1 = "0"
 
         # bpy.context.scene.SUBSTANCE_SGP_C005FD51-83D6-4ABB-8E77-7854641C0C0D.enable_horizontal_1 = '0'
         graph_parameters = getattr(context.scene, graph.parms_class_name)
+
+        # graph_parameters.callback = {"enabled": False}
+
+        # global QUEUE_CURSOR_ACTIVE
+        # QUEUE_CURSOR_ACTIVE = False
 
         graph_parameters.enable_horizontal_1 = "0"
         graph_parameters.enable_horizontal_2 = "0"
@@ -69,7 +90,19 @@ class VIEW3D_OT_generate_fabrics(Operator):
         graph_parameters.enable_horizontal_4 = "0"
         graph_parameters.enable_horizontal_5 = "0"
 
-        # graph.parms['enable_horizontal_1'] = True # '0'
+        graph_parameters.enable_vertical_1 = "1"
+        graph_parameters.enable_vertical_2 = "0"
+        graph_parameters.enable_vertical_3 = "0"
+        graph_parameters.enable_vertical_4 = "0"
+        graph_parameters.enable_vertical_5 = "0"
+
+        range = np.random.uniform(0.0, 2.0)
+        position = (1 - range / 2.0) / 2.0  # emprically found to ensure symmtery of the pattern
+
+        graph_parameters.range_vertical_1 = range
+        graph_parameters.position_vertical_1 = position
+        graph_parameters.color_vertical_1 = [1.000000, 0.000000, 0.000000, 1.000000]
+        graph_parameters.tile_vertical_1 = np.random.randint(1, 10)
 
         context.scene.sbsar_index = sbsar_index
 
@@ -100,6 +133,8 @@ class VIEW3D_OT_generate_fabrics(Operator):
         if event.type != "TIMER":
             return {"PASS_THROUGH"}
 
+        print("TIMER")
+
         if self.loaded_material in bpy.data.materials and not self.duplication_started:
             self.duplicate_material(context)
             self.duplication_started = True
@@ -109,17 +144,13 @@ class VIEW3D_OT_generate_fabrics(Operator):
             return {"PASS_THROUGH"}
 
         if all([m in bpy.data.materials for m in self.duplicated_materials]):
-            self.materials = [self.loaded_material] + self.duplicated_materials
-            self._finalize(context)
-            return {"FINISHED"}
+            if not self.finalized:
+                self.materials = [self.loaded_material] + self.duplicated_materials
+                self._finalize(context)
+                self.finalized = True
+            print("Finished generating fabrics!")
 
-        # if all([m in  for m in self.expected_materials]):
-        #     self._finalize(context)
-        #     return {"FINISHED"}
-
-        # if self.expected_material_name in bpy.data.materials:
-        #     print("finished!")
-        #     return {"FINISHED"}
+        # return {"FINISHED"}
 
         print([m.name for m in bpy.data.materials])
         # self.i +=1
