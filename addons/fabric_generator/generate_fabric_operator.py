@@ -19,6 +19,7 @@ if not SUBSTANCE_Api.is_running:
 
 # This function of the SUBSTANCE_Api is replaced to make these update synchronous.
 # When async was enabled, not all parameter changes where executed.
+@classmethod  # noqa
 def sbsar_parm_update_edited(cls, context, sbsar_id, graph_idx, graph_id, parm, value, output_size, callback):  # noqa
     _render_id = RENDER_KEY.format(sbsar_id, graph_idx)
     return callback(context, _render_id, sbsar_id, graph_idx, graph_id, parm, value, output_size)
