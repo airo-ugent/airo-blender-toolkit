@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 import bpy
 import numpy as np
@@ -52,38 +53,17 @@ class VIEW3D_OT_generate_fabrics(Operator):
 
     sbsar_path: bpy.props.StringProperty(name="SBSAR Path", subtype="FILE_PATH", default=default_sbsar_path)  # noqa
 
-    def _finalize(self, context):
-        # wm = context.window_manager
-        # wm.event_timer_remove(self._timer)
-        self._visualize_materials()
-        for material_name in self.materials:
-            self._randomize_material(context, material_name)
-        self._fix_projections(context)
-        context.scene.render.engine = "CYCLES"
-        abt.World()
-
-        for image in bpy.data.images:
-            image.reload()
-
-    def _randomize_material(self, context, material_name):
+    def _randomize_material(self, context, material_name, seed=0):
+        np.random.seed(seed)
         sbsar = context.scene.loaded_sbsars[material_name]
         graph = sbsar.graphs["Material"]
         graph.tiling.x = 1
 
-        sbsar_index = context.scene.loaded_sbsars.find(material_name)
-        print("index", sbsar_index, graph.parms_class_name)
-
-        # print(graph.parms["enable_horizontal_1"])
-
-        # graph.enable_horizontal_1 = "0"
+        # sbsar_index = context.scene.loaded_sbsars.find(material_name)
+        # print("index", sbsar_index, graph.parms_class_name)
 
         # bpy.context.scene.SUBSTANCE_SGP_C005FD51-83D6-4ABB-8E77-7854641C0C0D.enable_horizontal_1 = '0'
         graph_parameters = getattr(context.scene, graph.parms_class_name)
-
-        # graph_parameters.callback = {"enabled": False}
-
-        # global QUEUE_CURSOR_ACTIVE
-        # QUEUE_CURSOR_ACTIVE = False
 
         graph_parameters.enable_horizontal_1 = "0"
         graph_parameters.enable_horizontal_2 = "0"
@@ -99,18 +79,36 @@ class VIEW3D_OT_generate_fabrics(Operator):
 
         range = np.random.uniform(0.0, 2.0)
         position = (1 - range / 2.0) / 2.0  # emprically found to ensure symmtery of the pattern
+        shift = np.random.choice([0.0, 0.5])  # the second symmetric option: the stripes are at the edges then
+        position = position + shift
+        stripe_count = np.random.randint(1, 10)
+        stripe_color = abt.random_hsv()
 
         graph_parameters.range_vertical_1 = range
         graph_parameters.position_vertical_1 = position
-        graph_parameters.color_vertical_1 = [1.000000, 0.000000, 0.000000, 1.000000]
-        graph_parameters.tile_vertical_1 = np.random.randint(1, 10)
+        graph_parameters.tile_vertical_1 = stripe_count
+        graph_parameters.color_vertical_1 = stripe_color
 
-        context.scene.sbsar_index = sbsar_index
+        add_horizontal_stripes = np.random.choice([True, False])
+
+        if add_horizontal_stripes:
+            graph_parameters.enable_horizontal_1 = "1"
+            graph_parameters.range_horizontal_1 = range
+            graph_parameters.position_horizontal_1 = position
+            graph_parameters.tile_horizontal_1 = stripe_count
+            graph_parameters.color_horizontal_1 = stripe_color
+
+        # context.scene.sbsar_index = sbsar_index
 
     def _visualize_materials(self):
+        n = len(self.materials)
+        columns = int(np.ceil(np.sqrt(n)))
         for i, material_name in enumerate(self.materials):
             material = bpy.data.materials[material_name]
-            plane = abt.Plane(location=(2.1 * i, 0, 0))
+            scale = 2.1
+            x = scale * (i % columns)
+            y = -scale * (i // columns)
+            plane = abt.Plane(location=(x, y, 0))
             plane.blender_object.data.materials.append(material)
 
     def _fix_projections(self, context):
@@ -119,12 +117,16 @@ class VIEW3D_OT_generate_fabrics(Operator):
             sbsar = context.scene.loaded_sbsars[material_name]
             sbsar.graphs["Material"].shader_preset_list = "1"  # Projection Standard
 
-    def duplicate_material(self, context):
-        self.duplicated_materials = []
-        for _ in range(self.amount - 1):
-            name = SUBSTANCE_Utils.get_unique_name(self.filename, context)
-            self.duplicated_materials.append(name)
-            bpy.ops.substance.duplicate_sbsar()
+    def _mark_assets(self):
+        for material_name in self.materials:
+            material = bpy.data.materials[material_name]
+            material.asset_mark()
+            material.asset_data.description = "A randomly generated fabric texture."
+            tags = ["fabric", "cloth", "textile", "towel", "randomized"]
+            for tag in tags:
+                material.asset_data.tags.new(tag)
+            # bpy.ops.ed.lib_id_generate_preview()
+        bpy.ops.file.pack_all()
 
     def modal(self, context, event):
         if event.type in {"RIGHTMOUSE", "ESC"}:
@@ -134,28 +136,30 @@ class VIEW3D_OT_generate_fabrics(Operator):
         if event.type != "TIMER":
             return {"PASS_THROUGH"}
 
-        print("TIMER")
-
-        if self.loaded_material in bpy.data.materials and not self.duplication_started:
-            self.duplicate_material(context)
-            self.duplication_started = True
-            return {"PASS_THROUGH"}
-
-        if not self.duplication_started:
-            return {"PASS_THROUGH"}
-
-        if all([m in bpy.data.materials for m in self.duplicated_materials]):
-            if not self.finalized:
-                self.materials = [self.loaded_material] + self.duplicated_materials
-                self._finalize(context)
-                self.finalized = True
-            print("Finished generating fabrics!")
-
-        # return {"FINISHED"}
-
+        print("============================================================================")
+        print(self.materials)
         print([m.name for m in bpy.data.materials])
-        # self.i +=1
-        return {"RUNNING_MODAL"}
+        print("============================================================================")
+
+        if not all(m in bpy.data.materials for m in self.materials):
+            return {"PASS_THROUGH"}
+
+        # Finalize
+        wm = context.window_manager
+        wm.event_timer_remove(self._timer)
+
+        for i, material_name in enumerate(self.materials):
+            self._randomize_material(context, material_name, seed=i)
+
+        self._visualize_materials()
+        self._fix_projections(context)
+        context.scene.render.engine = "CYCLES"
+        abt.World()
+
+        self._mark_assets()
+
+        print("Finished generating.")
+        return {"FINISHED"}
 
     def execute(self, context):
         abt.clear_scene()
@@ -166,38 +170,24 @@ class VIEW3D_OT_generate_fabrics(Operator):
 
         self.filename = filename
 
-        print(abspath)
-        print(filename)
-        print(directory)
+        self.materials = []
+        for _ in range(self.amount):
+            self.materials.append(SUBSTANCE_Utils.get_unique_name(filename, context))
+            bpy.ops.substance.load_sbsar(
+                filepath=abspath,
+                files=[{"name": filename, "name": filename}],
+                directory=directory,
+            )
+            time.sleep(3.0)  # without this sleep the substance loader quickly gives errors when loading 10+ materials
 
-        print(f"Generating {self.amount} new fabric materials!")
-        # return {"FINISHED"}
-
-        self.loaded_material = SUBSTANCE_Utils.get_unique_name(filename, context)
-
-        # These calls are asynchronous.
-        # for i in range(self.amount):
-        # self.expected_materials.append(SUBSTANCE_Utils.get_unique_name(filename, context))
-        bpy.ops.substance.load_sbsar(
-            filepath=abspath,
-            files=[{"name": filename, "name": filename}],
-            directory=directory,
-        )
-
-        # bpy.context.scene.loaded_sbsars[0].graphs[0].shader_preset_list = '1'
         wm = context.window_manager
-        self._timer = wm.event_timer_add(1.0, window=context.window)
+        self._timer = wm.event_timer_add(2.0, window=context.window)
         wm.modal_handler_add(self)
         return {"RUNNING_MODAL"}
 
     def cancel(self, context):
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
-
-    # def invoke(self, context, event):
-    #     self.i = 0
-    #     context.window_manager.modal_handler_add(self)
-    #     return {'RUNNING_MODAL'}
 
 
 class VIEW3D_PT_generate_fabrics(Panel):
@@ -222,7 +212,7 @@ def register():
     bpy.types.Scene.fabric_sbsar_path = bpy.props.StringProperty(
         name="SBSAR Path", subtype="FILE_PATH", default=default_sbsar_path
     )
-    bpy.types.Scene.fabric_amount = bpy.props.IntProperty(name="Amount", default=2)
+    bpy.types.Scene.fabric_amount = bpy.props.IntProperty(name="Amount", default=5)
 
     for blender_class in blender_classes:
         bpy.utils.register_class(blender_class)
