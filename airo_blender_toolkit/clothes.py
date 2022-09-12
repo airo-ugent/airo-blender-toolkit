@@ -131,9 +131,6 @@ class PolygonalShirt(BlenderObject, KeypointedObject):
         self.scale = scale
         abt.select_only(self.blender_object)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.uv.unwrap()
-        bpy.ops.object.mode_set(mode="OBJECT")
 
     @property
     def category(self):

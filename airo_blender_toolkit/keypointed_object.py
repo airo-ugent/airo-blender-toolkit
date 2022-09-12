@@ -17,7 +17,8 @@ class KeypointedObject:
 
     @property
     def keypoints_3D(self):
-        vertices = self.blender_object.data.vertices
+        # TODO change this because self.blender_object only avaible when also blender object
+        vertices = self.blender_object.evaluated_get(bpy.context.evaluated_depsgraph_get()).data.vertices
         keypoints = {}
 
         for key, vertex_id in self.keypoint_ids.items():

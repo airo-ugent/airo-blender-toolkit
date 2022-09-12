@@ -16,8 +16,10 @@ class BlenderObject(ABC):
     @location.setter
     def location(self, value):
         self.blender_object.location = value
-        abt.select_only(self.blender_object)
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        # Applying the transform does not work well with geometry nodes that edit the mesh positions because they
+        # can override the transform.
+        # abt.select_only(self.blender_object)
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
     @property
     def rotation_euler(self):
@@ -26,8 +28,8 @@ class BlenderObject(ABC):
     @rotation_euler.setter
     def rotation_euler(self, value):
         self.blender_object.rotation_euler = value
-        abt.select_only(self.blender_object)
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        # abt.select_only(self.blender_object)
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
     @property
     def scale(self):
@@ -38,10 +40,10 @@ class BlenderObject(ABC):
         if isinstance(value, float):
             value = (value, value, value)
         self.blender_object.scale = value
-        abt.select_only(self.blender_object)
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        # abt.select_only(self.blender_object)
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
-    def add_material(self, required_tags=[]):
+    def add_material(self, required_tags=[], displacement=False):
         # Load a random asset with the required tags.
         assets = abt.assets()
         assets = [m for m in assets if m.type == "materials"]
@@ -61,15 +63,69 @@ class BlenderObject(ABC):
         self.blender_object.data.materials.append(material)
 
         # Fix texture scale
+        bpy.context.scene.render.engine = "CYCLES"
+
         try:
             override = bpy.context.copy()
             override["material"] = material
             with bpy.context.temp_override(**override):
                 bpy.ops.pha.tex_scale_fix()
+                bpy.ops.pha.tex_displacement_setup()
         except:  # noqa: E722
             pass
 
         return material
+
+    def add_geometry_node_group(self, name):
+        assets = abt.assets()
+        assets = [a for a in assets if a.type == "node_groups"]
+        # Currently if multiple assets with this name are found, we pick the first.
+        asset = next((a for a in assets if a.name == name), None)
+        if asset is None:
+            print(f"Asset with name {name} not found, no geomtery node group added.")
+            return
+
+        node_group_specification = asset.load()
+
+        # bpy.context.window.workspace = bpy.data.workspaces["Geometry Nodes"]
+
+        # TODO we could check if the node group is already present
+        # context = bpy.context
+        # override = context.copy()
+        # override["active_object"] = self.blender_object
+        # with context.temp_override(**override):
+        bpy.context.view_layer.objects.active = self.blender_object
+        bpy.ops.node.new_geometry_nodes_modifier()
+
+        # TODO check if all these inputs/outputs are avaible
+        # TODO implement smarter linking of loaded node groups
+        tree = self.blender_object.modifiers["GeometryNodes"].node_group
+        group_instance = tree.nodes.new("GeometryNodeGroup")
+        group_instance.node_tree = node_group_specification
+        a = tree.nodes["Group Input"].outputs["Geometry"]
+        b = group_instance.inputs["Mesh"]
+        c = group_instance.outputs["Mesh"]
+        d = tree.nodes["Group Output"].inputs["Geometry"]
+        tree.links.new(a, b)
+        tree.links.new(c, d)
+
+        for node in tree.nodes:
+            print(node.name, "-", node.label)
+
+        return group_instance
+
+    def unwrap(self):
+        # Can't seem to get these context overrides to work
+        # context = bpy.context
+        # print(context.active_object)
+        # override = context.copy()
+        # override["active_object"] = self.blender_object
+        # with context.temp_override(**override):
+
+        bpy.context.view_layer.objects.active = self.blender_object
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.uv.unwrap()
+        bpy.ops.object.mode_set(mode="OBJECT")
 
 
 class Plane(BlenderObject):
