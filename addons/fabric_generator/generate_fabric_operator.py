@@ -118,6 +118,17 @@ class VIEW3D_OT_generate_fabrics(Operator):
             sbsar.graphs["Material"].shader_preset_list = "1"  # Projection Standard
 
     def _mark_assets(self):
+
+        # for area in bpy.context.screen.areas:
+        #     if area.type == 'PROPERTIES':
+        #         area.ui_type = 'ASSETS'
+
+        # TypeError: bpy_struct: item.attr = val: enum "ASSET_BROWSER" not found in
+        # ('VIEW_3D', 'IMAGE_EDITOR', 'UV', 'CompositorNodeTree', 'TextureNodeTree', 'GeometryNodeTree',
+        # 'ShaderNodeTree', 'SEQUENCE_EDITOR', 'CLIP_EDITOR', 'DOPESHEET', 'TIMELINE', 'FCURVES', 'DRIVERS',
+        # 'NLA_EDITOR', 'TEXT_EDITOR', 'CONSOLE', 'INFO', 'OUTLINER', 'PROPERTIES', 'FILES', 'ASSETS', 'SPREADSHEET',
+        # 'PREFERENCES')
+
         for material_name in self.materials:
             material = bpy.data.materials[material_name]
             material.asset_mark()
@@ -125,7 +136,47 @@ class VIEW3D_OT_generate_fabrics(Operator):
             tags = ["fabric", "cloth", "textile", "towel", "randomized"]
             for tag in tags:
                 material.asset_data.tags.new(tag)
+
+            # Doesn't work, shows old preview
+            # preview = f"/home/idlab185/Documents/Adobe/Substance3DInBlender/export/{material_name}_baseColor.tga"
+            # bpy.ops.ed.lib_id_load_custom_preview(
+            #     {"id": material},
+            #     filepath=preview
+            # )
+
+            # This shows the wrong preview at this point :/
+            bpy.ops.ed.lib_id_generate_preview(
+                {"id": material},
+            )
+
+            # override = bpy.context.copy()
+
+            # # bpy.context.screen.areas.new()
+
+            # for area in bpy.context.screen.areas:
+            #     #if area.type != 'IMAGE_EDITOR' or area.ui_type != 'VIEW': # Image Editor View only
+            #     #if area.type != 'IMAGE_EDITOR' or area.ui_type != 'UV': # UV Editor View only
+            #     if area.type != 'ASSET_BROWSER':
+            #         continue
+
+            #     # area.spaces.active.show_region_header = False
+
+            #     override['area'] = area
+            #     # bpy.ops.image.view_zoom_ratio(override, ratio=1.0)
+            #     bpy.ops.ed.lib_id_generate_preview()
+            #     area.tag_redraw()
+
+            # active_asset = SpaceAssetInfo.get_active_asset(context)
+
+            # override = bpy.context.copy()
+            # override["material"] = material
+            # with bpy.context.temp_override(**override):
+
             # bpy.ops.ed.lib_id_generate_preview()
+
+        # for obj in bpy.data.objects:
+        # obj.asset_mark()
+
         bpy.ops.file.pack_all()
 
     def modal(self, context, event):
