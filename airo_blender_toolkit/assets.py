@@ -52,7 +52,9 @@ class Asset:
             if self.name not in getattr(other_file, self.type):
                 raise Exception(f"No asset with name {self.name} found in {self.source_file}.")
             getattr(current_file, self.type).append(self.name)
-        return getattr(bpy.data, self.type)[self.name]
+        loaded_asset = getattr(bpy.data, self.type)[self.name]
+        loaded_asset.asset_clear()
+        return loaded_asset
 
 
 def cache_directory():

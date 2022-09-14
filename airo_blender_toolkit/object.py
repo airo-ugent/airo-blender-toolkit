@@ -42,6 +42,7 @@ def remove_orphan_data():
         bpy.data.cameras,
         bpy.data.actions,
         bpy.data.lights,
+        bpy.data.worlds,
     ]
 
     for data_structure in data_structures:

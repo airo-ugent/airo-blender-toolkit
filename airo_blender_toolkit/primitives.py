@@ -108,10 +108,6 @@ class BlenderObject(ABC):
         d = tree.nodes["Group Output"].inputs["Geometry"]
         tree.links.new(a, b)
         tree.links.new(c, d)
-
-        for node in tree.nodes:
-            print(node.name, "-", node.label)
-
         return group_instance
 
     def unwrap(self):
