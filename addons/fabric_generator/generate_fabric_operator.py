@@ -19,9 +19,13 @@ if not SUBSTANCE_Api.is_running:
     _result = SUBSTANCE_Api.initialize()
 
 
-class VIEW3D_OT_generate_fabric(Operator):
+class MATERIAL_OT_generate_fabric(Operator):
     bl_idname = "material.generate_fabric"
     bl_label = "Generate Fabric"
+
+    # fabric_seed: bpy.props.IntProperty(
+    #     name="fabric_seed", description="Random seed used to randomize the pattern on the fabric.", default=0, min=0, soft_max=100  # noqa
+    # )
 
     def execute(self, context):
         self.start_time = time.time()
@@ -81,7 +85,8 @@ class VIEW3D_OT_generate_fabric(Operator):
         )
         return material_name
 
-    def _randomize_material(self, context, material_name, seed=0):
+    def _randomize_material(self, context, material_name):
+        seed = bpy.context.scene.fabric_seed
         print(f"Starting randomization of {material_name} with seed {seed}")
         np.random.seed(seed)
         sbsar = bpy.context.scene.loaded_sbsars[self.material_name]
@@ -126,6 +131,8 @@ class VIEW3D_OT_generate_fabric(Operator):
         render_id = RENDER_KEY.format(sbsar.id, graph.index)
         SUBSTANCE_Api.sbsar_render(render_id, sbsar.id, graph.index, Code_RequestType.r_sync)
 
+        bpy.data.materials[self.material_name].generated_fabric = True
+
 
 class VIEW3D_PT_generate_fabric(Panel):
     bl_space_type = "VIEW_3D"
@@ -135,17 +142,23 @@ class VIEW3D_PT_generate_fabric(Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.prop(context.scene, "fabric_seed")
         layout.operator("material.generate_fabric", text="Generate", icon="MOD_CLOTH")
 
 
-blender_classes = [VIEW3D_OT_generate_fabric, VIEW3D_PT_generate_fabric]
+blender_classes = [MATERIAL_OT_generate_fabric, VIEW3D_PT_generate_fabric]
 
 
 def register():
+    bpy.types.Scene.fabric_seed = bpy.props.IntProperty(name="Fabric Seed", default=0)
+    bpy.types.Material.generated_fabric = bpy.props.BoolProperty(name="Generated Fabric")
+
     for blender_class in blender_classes:
         bpy.utils.register_class(blender_class)
 
 
 def unregister():
+    del bpy.types.Scene.fabric_seed
+    del bpy.types.Material.generated_fabric
     for blender_class in blender_classes:
         bpy.utils.unregister_class(blender_class)

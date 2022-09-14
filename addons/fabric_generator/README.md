@@ -8,3 +8,6 @@
 
 ## Usage
 In the Blender 3D viewport press "N" and select the `Fabrics` tab, then click `Start generating`.
+
+## Notes:
+* In the addon preferences, set `Shader Present` to `Cycles/Eevee Standard`
