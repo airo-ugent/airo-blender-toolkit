@@ -12,7 +12,7 @@ class KeypointedObject:
     Trying this for now but not sure if it's worth it.
     """
 
-    def __init__(self, bpy_object: bpy.types.Object, keypoint_ids: dict[str, list[int]]):
+    def __init__(self, keypoint_ids: dict[str, list[int]]):
         self.keypoint_ids = keypoint_ids
 
     @property

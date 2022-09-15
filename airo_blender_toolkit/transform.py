@@ -1,8 +1,7 @@
 import os
 
 import numpy as np
-from mathutils import Matrix
-from scipy.spatial.transform import Rotation
+from mathutils import Matrix, Vector
 
 os.environ["INSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT"] = "1"
 
@@ -49,11 +48,60 @@ class Frame(np.ndarray):
         return self[0:3, 0:3]
 
 
-def rotate_point(point, rotation_origin, rotation_axis, angle):
-    unit_axis = rotation_axis / np.linalg.norm(rotation_axis)
-    rotation = Rotation.from_rotvec(angle * unit_axis)
-    point_new = rotation.as_matrix() @ (point - rotation_origin) + rotation_origin
-    return point_new
+def _rotate_point(point: Vector, rotation_matrix: Matrix, origin: Vector) -> Vector:
+    return rotation_matrix @ (point - origin) + origin
+
+
+def rotate_point_2D(point: Vector, angle: float, origin: Vector = Vector.Fill(2, 0)) -> Vector:
+    """Rotate a 2D point around another point (origin) by an angle in degrees.
+
+    Args:
+        point (Vector): The 2D point to be rotated. Must be castable to a Blender mathutils Vector
+        angle (float): The angle to rotate by in degrees. Positive angle are counter-clockwise.
+        origin (Vector, optional): The center of rotation. Must be castable to a Blender mathutils Vector.
+                                   Defaults to Vector.Fill(2, 0).
+
+    Returns:
+        Vector: The rotated point.
+    """
+    point = Vector(point)
+    dimensions = len(point)
+    assert dimensions == 2, "This function only supports rotating 2D points."
+
+    origin = Vector(origin)
+    assert len(origin) == dimensions, "The origin must have the same dimension as the point to be rotated."
+
+    rotation_matrix = Matrix.Rotation(np.deg2rad(angle), dimensions)
+    return _rotate_point(point, rotation_matrix, origin)
+
+
+def rotate_point_3D(point: Vector, angle: float, axis: Vector, origin: Vector = Vector.Fill(3, 0)) -> Vector:
+    """Rotate a 3D point around an axis that passes through another point (origin) by an angle in degrees.
+
+    Args:
+        point (Vector): The 3D point to be rotated. Must be castable to a Blender mathutils Vector
+        angle (float): The angle to rotate by in degrees. Positive angle are counter-clockwise.
+        axis (Vector): The axis of rotation. Must be castable to a Blender mathutils Vector
+        origin (Vector, optional): The center of rotation. Must be castable to a Blender mathutils Vector.
+                                   Defaults to Vector.Fill(3, 0).
+
+    Returns:
+        Vector: The rotated point.
+    """
+    point = Vector(point)
+    dimensions = len(point)
+    assert dimensions == 3, "This function only supports rotating 3D points."
+
+    assert axis is not None, "Please specify an axis of rotation for rotations in 3D."
+    axis = Vector(axis)
+    assert not np.isclose(axis.length, 0), "The axis of rotation cannot be length zero."
+    assert len(axis) == dimensions, "The axis of rotation must have the same dimension as the point to be rotated."
+
+    origin = Vector(origin)
+    assert len(origin) == dimensions, "The origin must have the same dimension as the point to be rotated."
+
+    rotation_matrix = Matrix.Rotation(np.deg2rad(angle), dimensions, axis)
+    return _rotate_point(point, rotation_matrix, origin)
 
 
 def project_point_on_line(point, point_on_line, line_direction):

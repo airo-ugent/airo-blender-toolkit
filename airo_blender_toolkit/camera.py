@@ -5,7 +5,7 @@ from airo_blender_toolkit.primitives import BlenderObject
 
 
 class Camera(BlenderObject):
-    def __init__(self, location=(0.0, 0.0, 1.0), rotation=(0, 0, 0), scale=1.0):
+    def __init__(self, location=(0.0, 0.0, 1.0), rotation=(0, 0, 0), scale=1.0, focal_length=24):
         if isinstance(scale, float):
             scale = (scale, scale, scale)
 
@@ -17,7 +17,9 @@ class Camera(BlenderObject):
         if scene.camera is None:
             scene.camera = self.blender_object
 
-    def look_at(self, point):
+        self.focal_length = focal_length
+
+    def look_at(self, point: Vector):
         camera = self.blender_object
         direction = Vector(point) - camera.location
         rot_quat = direction.to_track_quat("-Z", "Y")

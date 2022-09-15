@@ -2,45 +2,41 @@ import airo_blender_toolkit.camera as camera
 import airo_blender_toolkit.colors as colors
 from airo_blender_toolkit.assets import World, assets
 from airo_blender_toolkit.camera import Camera
+from airo_blender_toolkit.cleanup import clear_scene
 from airo_blender_toolkit.clothes import PolygonalPants, PolygonalShirt, Towel
 from airo_blender_toolkit.colors import random_hsv
 from airo_blender_toolkit.datastructures import InterpolatingDict
 from airo_blender_toolkit.gripper import BlockGripper, Gripper
-from airo_blender_toolkit.hdri import download_hdri, load_hdri
 from airo_blender_toolkit.keyframe import is_keyframed, keyframe_trajectory, keyframe_visibility
 from airo_blender_toolkit.keypointed_object import KeypointedObject
-from airo_blender_toolkit.object import clear_scene, make_object, select_only
+from airo_blender_toolkit.object import _blender_object_from_mesh
 from airo_blender_toolkit.path import CartesianPath, TiltedEllipticalArcPath
-from airo_blender_toolkit.primitives import IcoSphere, Plane, Sphere
-from airo_blender_toolkit.sampling import point_on_sphere
-from airo_blender_toolkit.texture import random_texture_name
+from airo_blender_toolkit.primitives import BlenderObject, IcoSphere, Plane, Sphere
+from airo_blender_toolkit.sampling import point_on_sphere, sample_point
 from airo_blender_toolkit.trajectory import Trajectory
 from airo_blender_toolkit.transform import (
     Frame,
     project_point_on_line,
-    rotate_point,
+    rotate_point_2D,
+    rotate_point_3D,
     visualize_line,
     visualize_path,
     visualize_transform,
 )
-from airo_blender_toolkit.triangulate import triangulate, triangulate_blender_object
+from airo_blender_toolkit.triangulate import triangulate
 from airo_blender_toolkit.view_3d import show_wireframes
 from airo_blender_toolkit.visible_vertices import is_visible, visible_vertices
 
 # Prevents F401 unused imports
 __all__ = (
-    "download_hdri",
-    "load_hdri",
     "camera",
     "colors",
-    "rotate_point",
     "Frame",
     "project_point_on_line",
-    "make_object",
+    "_blender_object_from_mesh",
     "select_only",
     "is_visible",
     "visible_vertices",
-    "random_texture_name",
     "KeypointedObject",
     "visualize_transform",
     "visualize_path",
@@ -57,7 +53,6 @@ __all__ = (
     "Gripper",
     "BlockGripper",
     "triangulate",
-    "triangulate_blender_object",
     "show_wireframes",
     "visualize_line",
     "random_hsv",
@@ -69,4 +64,8 @@ __all__ = (
     "Sphere",
     "IcoSphere",
     "assets",
+    "rotate_point_2D",
+    "rotate_point_3D",
+    "BlenderObject",
+    "sample_point",
 )

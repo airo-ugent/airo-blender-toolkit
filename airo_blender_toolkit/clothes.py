@@ -1,4 +1,3 @@
-import bpy
 import numpy as np
 
 import airo_blender_toolkit as abt
@@ -67,7 +66,7 @@ class Towel(BlenderObject, KeypointedObject):
         self.length = length
 
         mesh = self._create_mesh()
-        blender_object = abt.make_object(name=self.classification_name, mesh=mesh)
+        blender_object = abt._blender_object_from_mesh(mesh, self.category)
         super().__init__(blender_object, self.keypoint_ids)
 
     def _create_mesh(self):
@@ -125,12 +124,11 @@ class PolygonalShirt(BlenderObject, KeypointedObject):
         self.sleeve_length = sleeve_length
         self.sleeve_angle = sleeve_angle
 
-        self.blender_object = self.make_shirt_object()
-        super().__init__(self.blender_object, self.keypoint_ids)
+        blender_object = self.make_shirt_object()
+        super(PolygonalShirt, self).__init__(blender_object=blender_object, keypoint_ids=self.keypoint_ids)
 
         self.scale = scale
-        abt.select_only(self.blender_object)
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        self.apply_transforms()
 
     @property
     def category(self):
@@ -162,8 +160,8 @@ class PolygonalShirt(BlenderObject, KeypointedObject):
 
         a = np.deg2rad(self.sleeve_angle)
         up = np.array([0.0, 0.0, 1.0])
-        sleeve_end_top = abt.rotate_point(sleeve_end_top, sleeve_middle, up, -a)
-        sleeve_end_bottom = abt.rotate_point(sleeve_end_bottom, sleeve_middle, up, -a)
+        sleeve_end_top = abt.rotate_point_3D(sleeve_end_top, -a, sleeve_middle, up)
+        sleeve_end_bottom = abt.rotate_point_3D(sleeve_end_bottom, -a, sleeve_middle, up)
 
         vertices = [
             bottom_side,
@@ -186,7 +184,7 @@ class PolygonalShirt(BlenderObject, KeypointedObject):
 
         faces = [list(range(len(vertices)))]
         mesh = vertices, [], faces
-        blender_object = abt.make_object(self.category.name, mesh)
+        blender_object = abt._blender_object_from_mesh(mesh, self.category.name)
         return blender_object
 
 
@@ -251,7 +249,7 @@ class PolygonalPants(KeypointedObject):
 
         faces = [list(range(len(vertices)))]
         mesh = vertices, [], faces
-        blender_object = abt.make_object(self.classification_name, mesh)
+        blender_object = abt._blender_object_from_mesh(mesh, self.catergory.name)
         return blender_object
 
 

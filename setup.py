@@ -10,5 +10,14 @@ setup(
     description="Python package to faciliate the usage of the Blender python API @ AIRO UGent",
     url="https://github.com/airo-ugent/airo-blender-toolkit",
     packages=["airo_blender_toolkit"],
-    install_requires=["rtree", "triangle", "trimesh", "requests", "scipy", "pydantic", "appdirs"],
+    install_requires=[
+        "rtree",
+        "triangle",
+        "trimesh",
+        "requests",
+        "scipy",
+        "pydantic",
+        "appdirs",
+        "pytest-blender",
+    ],
 )
