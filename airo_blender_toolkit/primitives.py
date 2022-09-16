@@ -179,13 +179,10 @@ class BlenderObject:
 
 
 class Plane(BlenderObject):
-    def __init__(self, size=2.0, location=(0.0, 0.0, 0.0), rotation=(0.0, 0.0, 0.0), scale=1.0):
-        if isinstance(scale, float):
-            scale = (scale, scale, scale)
-
-        bpy.ops.mesh.primitive_plane_add(size=size, location=location, rotation=rotation, scale=scale)
+    def __init__(self, size=2.0, location=(0.0, 0.0, 0.0), rotation=(0.0, 0.0, 0.0)):
+        bpy.ops.mesh.primitive_plane_add(size=size, location=location, rotation=rotation)
         self.blender_object = bpy.context.active_object
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 
 class Sphere(BlenderObject):
@@ -195,7 +192,7 @@ class Sphere(BlenderObject):
 
         bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, location=location, rotation=rotation, scale=scale)
         self.blender_object = bpy.context.active_object
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 
 class IcoSphere(BlenderObject):
@@ -205,4 +202,4 @@ class IcoSphere(BlenderObject):
 
         bpy.ops.mesh.primitive_ico_sphere_add(radius=radius, location=location, rotation=rotation, scale=scale)
         self.blender_object = bpy.context.active_object
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
