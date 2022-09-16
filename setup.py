@@ -19,5 +19,6 @@ setup(
         "pydantic",
         "appdirs",
         "pytest-blender",
+        "diskcache"
     ],
 )
