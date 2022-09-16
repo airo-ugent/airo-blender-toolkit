@@ -40,6 +40,13 @@ shirt_keypoints = [
     "bottom_left",
 ]
 
+towel_keypoints = [
+    "corner0",
+    "corner1",
+    "corner2",
+    "corner3",
+]
+
 short_sleeved_shirt = CocoKeypointCategory(
     supercategory="clothes",
     id=1,
@@ -56,18 +63,26 @@ long_sleeved_shirt = CocoKeypointCategory(
     skeleton=[],  # TODO
 )
 
+towel = CocoKeypointCategory(
+    supercategory="clothes",
+    id=14,
+    name="towel",
+    keypoints=towel_keypoints,
+    skeleton=[],  # TODO
+)
+
 
 class Towel(BlenderObject, KeypointedObject):
-    category = "towel"
+    category = towel
     keypoint_ids = {"corner0": 0, "corner1": 1, "corner2": 2, "corner3": 3}
 
-    def __init__(self, length, width):
+    def __init__(self, length: float, width: float):
         self.width = width
         self.length = length
 
         mesh = self._create_mesh()
-        blender_object = abt._blender_object_from_mesh(mesh, self.category)
-        super().__init__(blender_object, self.keypoint_ids)
+        blender_object = abt._blender_object_from_mesh(mesh, self.category.name)
+        super(Towel, self).__init__(blender_object=blender_object, keypoint_ids=self.keypoint_ids)
 
     def _create_mesh(self):
         width, length = float(self.width), float(self.length)
