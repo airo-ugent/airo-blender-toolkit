@@ -101,32 +101,55 @@ class MATERIAL_OT_generate_fabric(Operator):
             parameter_id = parameter_ids_by_name[parameter_name]
             SUBSTANCE_Api.msg_sbsar_update_parm(sbsar.id, parameter_id, value, request_type=Code_RequestType.r_sync)
 
-        # Disable all stripes except the first horizontal and vertical one.s
-        for i in range(2, 6):
-            update_parameter(f"enable_horizontal_{i}", 0)
-            update_parameter(f"enable_vertical_{i}", 0)
+        def towel_plain():
+            for i in range(1, 6):
+                update_parameter(f"enable_horizontal_{i}", 0)
+                update_parameter(f"enable_vertical_{i}", 0)
+            update_parameter("color_bg", abt.random_hsv())
 
-        horizontal_stripes = np.random.choice([True, False])
-        if not horizontal_stripes:
-            update_parameter("enable_horizontal_1", 0)
+        def towel_stripes():
+            for i in range(1, 6):
+                update_parameter(f"enable_horizontal_{i}", 0)
+            for i in range(2, 6):
+                update_parameter(f"enable_vertical_{i}", 0)
 
-        stripe_width = np.random.uniform(0.0, 2.0)
-        position = (1 - stripe_width / 2.0) / 2.0  # emprically found to ensure symmtery of the pattern
-        shift = np.random.choice([0.0, 0.5])  # the second symmetric option: the stripes are at the edges then
-        position = position + shift
-        stripe_count = np.random.randint(1, 10)
-
-        for orientation in ["horizontal", "vertical"]:
+            stripe_width = np.random.uniform(0.0, 2.0)
+            position = (1 - stripe_width / 2.0) / 2.0  # emprically found to ensure symmtery of the pattern
+            shift = np.random.choice([0.0, 0.5])  # the second symmetric option: the stripes are at the edges then
+            position = position + shift
+            stripe_count = np.random.randint(1, 10)
+            orientation = "vertical"
             update_parameter(f"range_{orientation}_1", stripe_width)
             update_parameter(f"position_{orientation}_1", position)
             update_parameter(f"tile_{orientation}_1", stripe_count)
-
-        stripe_color = abt.random_hsv()
-        update_parameter("color_vertical_1", stripe_color)
-        differently_colored_stripes = np.random.choice([True, False])
-        if differently_colored_stripes:
             stripe_color = abt.random_hsv()
-        update_parameter("color_horizontal_1", stripe_color)
+            update_parameter("color_vertical_1", stripe_color)
+
+        def towel_grid():
+            for i in range(2, 6):
+                update_parameter(f"enable_horizontal_{i}", 0)
+                update_parameter(f"enable_vertical_{i}", 0)
+
+            stripe_width = np.random.uniform(0.0, 2.0)
+            position = (1 - stripe_width / 2.0) / 2.0  # emprically found to ensure symmtery of the pattern
+            shift = np.random.choice([0.0, 0.5])  # the second symmetric option: the stripes are at the edges then
+            position = position + shift
+            stripe_count = np.random.randint(1, 10)
+
+            for orientation in ["horizontal", "vertical"]:
+                update_parameter(f"range_{orientation}_1", stripe_width)
+                update_parameter(f"position_{orientation}_1", position)
+                update_parameter(f"tile_{orientation}_1", stripe_count)
+
+            stripe_color = abt.random_hsv()
+            update_parameter("color_vertical_1", stripe_color)
+            differently_colored_stripes = np.random.choice([True, False])
+            if differently_colored_stripes:
+                stripe_color = abt.random_hsv()
+            update_parameter("color_horizontal_1", stripe_color)
+
+        towel_randomizer = np.random.choice([towel_plain, towel_stripes, towel_grid])
+        towel_randomizer()
 
         render_id = RENDER_KEY.format(sbsar.id, graph.index)
         SUBSTANCE_Api.sbsar_render(render_id, sbsar.id, graph.index, Code_RequestType.r_sync)
