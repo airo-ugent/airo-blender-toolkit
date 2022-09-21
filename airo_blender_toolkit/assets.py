@@ -190,6 +190,11 @@ def assets() -> List[Asset]:
     Returns:
         List[Asset]: The list of assets.
     """
+    if asset_cache_outdated():
+        start = time.time()
+        print("airo-blender-toolkit: Rebuilding asset cache, this can take a while.")
+        rebuild_asset_cache()
+        print(f"airo-blender-toolkit: Asset cache has been rebuilt in {time.time() - start:.2f} seconds.")
 
     with Cache(cache_directory()) as cache:
         return cache["assets"]
@@ -232,11 +237,3 @@ def assets_with_required_tags(assets, required_tags=[]):
         if all((required_tag in tags) for required_tag in required_tags):
             results.append(asset)
     return results
-
-
-# Update asses cache on module import
-if asset_cache_outdated():
-    start = time.time()
-    print("airo-blender-toolkit: Rebuilding asset cache, this can take a while.")
-    rebuild_asset_cache()
-    print(f"airo-blender-toolkit: Asset cache has been rebuilt in {time.time() - start:.2f} seconds.")
