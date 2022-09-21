@@ -8,6 +8,7 @@ After the cache if built, it can be used to filter assets by type and tags.
 The chosen assets can then easily be loaded with asset.load()
 """
 
+import time
 from pathlib import Path
 from typing import Dict, List
 
@@ -16,6 +17,7 @@ import numpy as np
 from appdirs import user_cache_dir
 from diskcache import Cache
 
+from airo_blender_toolkit.cleanup import remove_orphan_data
 from airo_blender_toolkit.primitives import BlenderObject
 
 # The 6 asset types in the filter dropdown in the Asset Browser
@@ -46,15 +48,31 @@ class Asset:
         """Load the Asset from disk into the open Blend file.
 
         Returns:
-            The raw Blender object that was loaded.
+            The raw Blender datablock that was loaded.
         """
-        with bpy.data.libraries.load(str(self.source_file), assets_only=True) as (other_file, current_file):
-            if self.name not in getattr(other_file, self.type):
+
+        datablocks_typed = getattr(bpy.data, self.type)
+        names_before = set([data.name for data in datablocks_typed])
+
+        with bpy.data.libraries.load(str(self.source_file), assets_only=True) as (
+            datablocks_source,
+            datablocks_destination,
+        ):
+            if self.name not in getattr(datablocks_source, self.type):
                 raise Exception(f"No asset with name {self.name} found in {self.source_file}.")
-            getattr(current_file, self.type).append(self.name)
-        loaded_asset = getattr(bpy.data, self.type)[self.name]
-        loaded_asset.asset_clear()
-        return loaded_asset
+            getattr(datablocks_destination, self.type).append(self.name)
+
+        names_after = set([data.name for data in datablocks_typed])
+        new_name = names_after - names_before
+        assert len(new_name) == 1
+        new_name = new_name.pop()
+        datablock_new = datablocks_typed[new_name]
+
+        if self.type == "objects":  # alternative:   for obj in datablocks_destination.objects:
+            bpy.context.scene.collection.objects.link(datablock_new)
+
+        datablock_new.asset_clear()  # Remove the asset mark for this file
+        return datablock_new
 
 
 def cache_directory():
@@ -105,6 +123,7 @@ def process_assets(assets_to_be_processed: Dict[str, List[str]], library_name: s
             )
             processed_assets.append(asset_info)
             bpy_data_collection.remove(asset)
+            remove_orphan_data()  # this removes the default scene when the cache is updated :/
     return processed_assets
 
 
@@ -171,9 +190,6 @@ def assets() -> List[Asset]:
     Returns:
         List[Asset]: The list of assets.
     """
-    if asset_cache_outdated():
-        print("Rebuilding asset cache, this can take a while.")
-        rebuild_asset_cache()
 
     with Cache(cache_directory()) as cache:
         return cache["assets"]
@@ -207,3 +223,20 @@ class World(BlenderObject):
         world = asset.load()
         bpy.context.scene.world = world
         self.blender_object = world
+
+
+def assets_with_required_tags(assets, required_tags=[]):
+    results = []
+    for asset in assets:
+        tags = asset.tags
+        if all((required_tag in tags) for required_tag in required_tags):
+            results.append(asset)
+    return results
+
+
+# Update asses cache on module import
+if asset_cache_outdated():
+    start = time.time()
+    print("airo-blender-toolkit: Rebuilding asset cache, this can take a while.")
+    rebuild_asset_cache()
+    print(f"airo-blender-toolkit: Asset cache has been rebuilt in {time.time() - start:.2f} seconds.")

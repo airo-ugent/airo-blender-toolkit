@@ -114,11 +114,6 @@ class KeypointedObject:
                 color = keypoints_color
 
             sphere = abt.Sphere(location=keypoint, radius=radius)
+            sphere.add_colored_material((0, 0, 1, 1))
             sphere.blender_object.name = category
-
             sphere.blender_object.parent = self.blender_object
-
-            # TODO bring back the color
-            # material = sphere.new_material("Material")
-            # material.set_principled_shader_value("Base Color", tuple(color) + (1,))
-            # material.blender_object.diffuse_color = tuple(color) + (1,)

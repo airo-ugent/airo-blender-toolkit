@@ -19,6 +19,18 @@ class BlenderObject:
         instance = cls(blender_object)
         return instance
 
+    @classmethod
+    def random(cls, required_tags=[]):
+        assets = abt.assets()
+        assets = [a for a in assets if a.type == "objects"]
+        assets = abt.assets_with_required_tags(assets, required_tags)
+        assert len(assets) > 0  # No assets of type "objects" found.
+        index = np.random.choice(len(assets))
+        asset = assets[index]
+        blender_object = asset.load()
+        instance = cls(blender_object)
+        return instance
+
     @property
     def location(self):
         return self.blender_object.location
@@ -63,21 +75,23 @@ class BlenderObject:
         self.activate_only()
         bpy.ops.object.transform_apply(location=location, rotation=rotation, scale=scale)
 
-    def add_material(self, required_tags=[], displacement=False):
+    def add_colored_material(self, color, roughness=0.5):
+        material = bpy.data.materials.new(name="Material")
+        material.diffuse_color = color  # todo check if color is tuple of length 4
+        material.use_nodes = True
+        bdsf = material.node_tree.nodes["Principled BSDF"]
+        bdsf.inputs["Base Color"].default_value = color
+        self.blender_object.data.materials.append(material)
+
+    def add_random_material(self, required_tags=[], displacement=False):
         # Load a random asset with the required tags.
         assets = abt.assets()
         assets = [m for m in assets if m.type == "materials"]
+        assets = abt.assets_with_required_tags(assets, required_tags)
+        assert len(assets) > 0
 
-        assets_with_required_tags = []
-        for asset in assets:
-            tags = asset.tags
-            if all((required_tag in tags) for required_tag in required_tags):
-                assets_with_required_tags.append(asset)
-
-        assert len(assets_with_required_tags) != 0
-
-        index = np.random.choice(len(assets_with_required_tags))
-        asset = assets_with_required_tags[index]
+        index = np.random.choice(len(assets))
+        asset = assets[index]
         material = asset.load()
 
         self.blender_object.data.materials.append(material)

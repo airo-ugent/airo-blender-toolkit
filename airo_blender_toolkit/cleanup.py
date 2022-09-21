@@ -19,6 +19,7 @@ def remove_all_objects():
 def remove_orphan_data():
     """Remove all data blocks which are not used anymore."""
     data_structures = [
+        bpy.data.objects,
         bpy.data.meshes,
         bpy.data.materials,
         bpy.data.textures,
@@ -29,6 +30,8 @@ def remove_orphan_data():
         bpy.data.lights,
         bpy.data.worlds,
         bpy.data.node_groups,
+        bpy.data.collections,
+        bpy.data.particles,
     ]
 
     for data_structure in data_structures:
