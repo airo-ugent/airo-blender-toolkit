@@ -220,7 +220,7 @@ def filtered_assets(type: str, required_tags: List[str] = [], disallowed_tags=[]
 
     if custom_filter is None:
 
-        def custom_filter():
+        def custom_filter(_):
             return True
 
     return [a for a in assets() if default_filter(a) and custom_filter(a)]
