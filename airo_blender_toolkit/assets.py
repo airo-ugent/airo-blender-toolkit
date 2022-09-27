@@ -200,7 +200,7 @@ def assets() -> List[Asset]:
         return cache["assets"]
 
 
-def filtered_assets(type: str, required_tags: List[str] = []) -> List[Asset]:
+def filtered_assets(type: str, required_tags: List[str] = [], disallowed_tags=[], custom_filter=None) -> List[Asset]:
     """Filters through all assets and returns those with required type and tags.
 
     Args:
@@ -211,13 +211,19 @@ def filtered_assets(type: str, required_tags: List[str] = []) -> List[Asset]:
         List[Asset]: List of the assets that match the requirements.
     """
 
-    def filter_condition(asset):
+    def default_filter(asset):
         if asset.type != type:
             return False
         required_tags_present = all((required_tag in asset.tags) for required_tag in required_tags)
-        return required_tags_present
+        all_tags_allowed = all((disallowed_tag not in asset.tags) for disallowed_tag in disallowed_tags)
+        return required_tags_present and all_tags_allowed
 
-    return [a for a in assets() if filter_condition(a)]
+    if custom_filter is None:
+
+        def custom_filter():
+            return True
+
+    return [a for a in assets() if default_filter(a) and custom_filter(a)]
 
 
 class World(BlenderObject):
@@ -228,12 +234,3 @@ class World(BlenderObject):
         world = asset.load()
         bpy.context.scene.world = world
         self.blender_object = world
-
-
-def assets_with_required_tags(assets, required_tags=[]):
-    results = []
-    for asset in assets:
-        tags = asset.tags
-        if all((required_tag in tags) for required_tag in required_tags):
-            results.append(asset)
-    return results

@@ -1,6 +1,6 @@
 import airo_blender_toolkit.camera as camera
 import airo_blender_toolkit.colors as colors
-from airo_blender_toolkit.assets import World, assets, assets_with_required_tags
+from airo_blender_toolkit.assets import Asset, World, assets, filtered_assets
 from airo_blender_toolkit.camera import Camera
 from airo_blender_toolkit.cleanup import clear_scene
 from airo_blender_toolkit.clothes import PolygonalPants, PolygonalShirt, Towel
@@ -68,5 +68,6 @@ __all__ = (
     "rotate_point_3D",
     "BlenderObject",
     "sample_point",
-    "assets_with_required_tags",
+    "filtered_assets",
+    "Asset",
 )

@@ -20,10 +20,8 @@ class BlenderObject:
         return instance
 
     @classmethod
-    def random(cls, required_tags=[]):
-        assets = abt.assets()
-        assets = [a for a in assets if a.type == "objects"]
-        assets = abt.assets_with_required_tags(assets, required_tags)
+    def random(cls, required_tags=[], disallowed_tags=[], custom_filter=None):
+        assets = abt.filtered_assets("objects", required_tags, disallowed_tags, custom_filter)
         assert len(assets) > 0  # No assets of type "objects" found.
         index = np.random.choice(len(assets))
         asset = assets[index]
@@ -83,11 +81,9 @@ class BlenderObject:
         bdsf.inputs["Base Color"].default_value = color
         self.blender_object.data.materials.append(material)
 
-    def add_random_material(self, required_tags=[], displacement=False):
+    def add_random_material(self, required_tags=[], disallowed_tags=[], custom_filter=None):
         # Load a random asset with the required tags.
-        assets = abt.assets()
-        assets = [m for m in assets if m.type == "materials"]
-        assets = abt.assets_with_required_tags(assets, required_tags)
+        assets = abt.filtered_assets("materials", required_tags, disallowed_tags, custom_filter)
         assert len(assets) > 0
 
         index = np.random.choice(len(assets))
