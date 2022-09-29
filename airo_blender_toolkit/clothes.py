@@ -41,10 +41,10 @@ shirt_keypoints = [
 ]
 
 towel_keypoints = [
-    "corner0",
     "corner1",
     "corner2",
     "corner3",
+    "corner4",
 ]
 
 short_sleeved_shirt = CocoKeypointCategory(
@@ -74,7 +74,7 @@ towel = CocoKeypointCategory(
 
 class Towel(BlenderObject, KeypointedObject):
     category = towel
-    keypoint_ids = {"corner0": 0, "corner1": 1, "corner2": 2, "corner3": 3}
+    keypoint_ids = {"corner1": 0, "corner2": 1, "corner3": 2, "corner4": 3}
 
     def __init__(self, length: float, width: float):
         self.width = width
