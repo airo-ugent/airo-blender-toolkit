@@ -32,7 +32,11 @@ def remove_orphan_data():
         bpy.data.node_groups,
         bpy.data.collections,
         bpy.data.particles,
+        bpy.data.libraries,
     ]
+
+    for library in bpy.data.libraries:
+        library.use_extra_user = False
 
     for data_structure in data_structures:
         for block in data_structure:
