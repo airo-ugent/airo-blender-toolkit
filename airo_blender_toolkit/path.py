@@ -194,7 +194,7 @@ def quadratic_bezier_polynomial(control_points, bezier_parameter):
 
     P0_term = ((1 - t) ** 2) * P0
     P1_term = 2 * (1 - t) * t * P1
-    P2_term = (t ** 2) * P2
+    P2_term = (t**2) * P2
     return P0_term + P1_term + P2_term
 
 
@@ -207,8 +207,8 @@ def cubic_bezier_polynomial(control_points, bezier_parameter):
 
     P0_term = ((1 - t) ** 3) * P0
     P1_term = 3 * ((1 - t) ** 2) * t * P1
-    P2_term = 3 * (1 - t) * (t ** 2) * P2
-    P3_term = (t ** 3) * P3
+    P2_term = 3 * (1 - t) * (t**2) * P2
+    P3_term = (t**3) * P3
     return P0_term + P1_term + P2_term + P3_term
 
 

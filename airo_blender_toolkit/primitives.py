@@ -195,6 +195,14 @@ class Plane(BlenderObject):
         # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 
+class Cube(BlenderObject):
+    def __init__(self, size=2.0, location=(0.0, 0.0, 0.0), rotation=(0.0, 0.0, 0.0), scale=1.0):
+        if isinstance(scale, float):
+            scale = (scale, scale, scale)
+        bpy.ops.mesh.primitive_cube_add(size=size, location=location, rotation=rotation, scale=scale)
+        self.blender_object = bpy.context.active_object
+
+
 class Sphere(BlenderObject):
     def __init__(self, radius=1.0, location=(0.0, 0.0, 0.0), rotation=(0.0, 0.0, 0.0), scale=1.0):
         if isinstance(scale, float):
@@ -213,3 +221,14 @@ class IcoSphere(BlenderObject):
         bpy.ops.mesh.primitive_ico_sphere_add(radius=radius, location=location, rotation=rotation, scale=scale)
         self.blender_object = bpy.context.active_object
         # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+
+class Cylinder(BlenderObject):
+    def __init__(self, radius=1.0, depth=2.0, location=(0.0, 0.0, 0.0), rotation=(0.0, 0.0, 0.0), scale=1.0):
+        if isinstance(scale, float):
+            scale = (scale, scale, scale)
+
+        bpy.ops.mesh.primitive_cylinder_add(
+            radius=radius, depth=depth, location=location, rotation=rotation, scale=scale
+        )
+        self.blender_object = bpy.context.active_object

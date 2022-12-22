@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -12,6 +12,10 @@ Segmentation = List[List[Union[float, int]]]
 FileName = str
 Relativepath = str
 Url = str
+IsCrowd = int
+Segmentation = List[Tuple[int, int]]  # not sure about this
+Area = float
+BoundingBox = Tuple[int, int, int, int]
 
 
 class CocoInfo(BaseModel):
@@ -46,9 +50,13 @@ class CocoKeypointCategory(BaseModel):
 
 
 class CocoKeypointAnnotation(BaseModel):
-    category_id: CategoryID
     id: AnnotationID
     image_id: ImageID
+    category_id: CategoryID
+    segmentation: Segmentation
+    area: Area
+    bbox: BoundingBox
+    iscrowd: IsCrowd
 
     num_keypoints: Optional[int]
     keypoints: List[float]

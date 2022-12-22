@@ -34,7 +34,7 @@ def is_visible(co: Vector):
         boolean: visibility
     """
     co = Vector(co)
-    
+
     bpy.context.view_layer.update()  # ensures camera matrix is up to date
     scene = bpy.context.scene
     camera_obj = scene.camera  # bpy.types.Object

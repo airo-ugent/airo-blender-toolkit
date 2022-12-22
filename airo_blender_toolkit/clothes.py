@@ -164,7 +164,7 @@ class PolygonalShirt(BlenderObject, KeypointedObject):
 
         A = np.abs(self.bottom_width - self.shoulder_width) / 2.0
         C = self.sleeve_width_start
-        B = np.sqrt(C ** 2 - A ** 2)
+        B = np.sqrt(C**2 - A**2)
         armpit_height = self.shoulder_height - B
         armpit = np.array([self.bottom_width / 2.0, armpit_height, 0.0])
 

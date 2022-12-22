@@ -8,6 +8,11 @@ orange = [0.947307, 0.597202, 0.208637, 1.000000]
 red = [0.564712, 0.078187, 0.090842, 1.000000]
 
 
+blender_red = [0.930111, 0.036889, 0.084376, 1.000000]
+blender_green = [0.205079, 0.527115, 0.006049, 1.000000]
+blender_blue = [0.028426, 0.226966, 0.760525, 1.000000]
+
+
 def random_hsv(hrange=(0.0, 1.0), srange=(0.0, 1.0), vrange=(0.0, 1.0)):
     color = Color()
     cloth_hue = np.random.uniform(*hrange)

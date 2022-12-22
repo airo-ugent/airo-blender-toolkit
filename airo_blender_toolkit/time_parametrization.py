@@ -26,4 +26,4 @@ class Bezier(TimeParametrizaion):
 class MinimumJerk(TimeParametrizaion):
     def map(self, time_completion):
         t = time_completion
-        return 10 * (t ** 3) - 15 * (t ** 4) + 6 * (t ** 5)
+        return 10 * (t**3) - 15 * (t**4) + 6 * (t**5)
